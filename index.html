@@ -82,6 +82,36 @@
       </div>
       <div class="topscroller" id="topOffers" role="list" aria-label="Top-Angebote Scroller"></div>
     </section>
+
+    <!-- API‑Sandbox (nur für Entwicklung) -->
+    <section class="card" aria-label="API-Sandbox" style="margin-top:12px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px">
+        <h2 style="margin:0">API‑Sandbox (Dev)</h2>
+        <span class="badge">Nur lokal / Test</span>
+      </div>
+      <p style="color:var(--muted); margin:6px 0 12px">Hier kannst du die <code>nestoriaSearch()</code>‑Abfrage testen, ohne das restliche Layout zu ändern. Ergebnisse landen oben in der Leiste „Top‑Angebote“.</p>
+      <div class="row">
+        <div>
+          <label for="apiPlace">Ort / place_name</label>
+          <input id="apiPlace" value="muenchen" placeholder="z. B. muenchen, schwabing"/>
+        </div>
+        <div>
+          <label for="apiResults">Anzahl Ergebnisse</label>
+          <select id="apiResults">
+            <option>8</option>
+            <option selected>12</option>
+            <option>16</option>
+            <option>24</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px">
+        <button class="btn" id="btnNestoriaTest">Nestoria testen</button>
+        <button class="btn secondary" id="btnNestoriaReset">Platzhalter anzeigen</button>
+      </div>
+      <div id="apiStatus" style="margin-top:8px; font-size:12px; color:var(--muted)"></div>
+    </section>
+
     <div class="grid">
       <!-- Sidebar: Filter -->
       <section class="card">
@@ -449,6 +479,27 @@ function applyFilters(){
 
     // Erst Platzhalter anzeigen
     renderTopOffers(TOP_PLACEHOLDERS);
+
+    // --- API‑Sandbox: Buttons verdrahten (Dev) ---
+    const btnNestoriaTest = document.getElementById('btnNestoriaTest');
+    const btnNestoriaReset = document.getElementById('btnNestoriaReset');
+    const apiPlace = document.getElementById('apiPlace');
+    const apiResults = document.getElementById('apiResults');
+    const apiStatus = document.getElementById('apiStatus');
+    if(btnNestoriaTest){
+      btnNestoriaTest.addEventListener('click', ()=>{
+        apiStatus.textContent = 'Frage Nestoria per JSONP an…';
+        try{
+          nestoriaSearch({place: (apiPlace?.value||'muenchen'), results: parseInt(apiResults?.value||'12',10)});
+          apiStatus.textContent = 'Anfrage gesendet. Wenn CORS/Netzwerk ok ist, erscheinen die Karten oben.';
+        }catch(err){
+          console.error(err); apiStatus.textContent = 'Fehler beim Starten der Abfrage';
+        }
+      });
+    }
+    if(btnNestoriaReset){
+      btnNestoriaReset.addEventListener('click', ()=>{ renderTopOffers(TOP_PLACEHOLDERS); apiStatus.textContent = 'Platzhalter wiederhergestellt.'; });
+    }
 
     // Initial render
     applyFilters();
