@@ -44,6 +44,10 @@
     .meta{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:#aab3c7}
     footer{padding:30px 16px; color:#8b94a7; font-size:12px; text-align:center}
     .badge{display:inline-block; padding:4px 8px; border-radius:999px; background:#111524; border:1px solid #273043; font-size:11px}
+      /* Entfernt Browser-Spinner und verhindert versehentliche Minuswerte-UX */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number]{ -moz-appearance: textfield; }
   </style>
 </head>
 <body>
@@ -67,7 +71,7 @@
         <div class="row">
           <div>
             <label for="maxRent">Max. Kaltmiete (€)</label>
-            <input id="maxRent" type="number" placeholder="1400" />
+            <input id="maxRent" type="number" min="0" step="50" inputmode="numeric" placeholder="1400" />
           </div>
           <div>
             <label for="rooms">Min. Zimmer</label>
@@ -86,11 +90,30 @@
             <select id="district">
               <option value="">alle</option>
               <option>Altstadt-Lehel</option>
+              <option>Ludwigsvorstadt-Isarvorstadt</option>
               <option>Maxvorstadt</option>
               <option>Schwabing-West</option>
-              <option>Neuhausen-Nymphenburg</option>
-              <option>Haidhausen</option>
+              <option>Au-Haidhausen</option>
               <option>Sendling</option>
+              <option>Sendling-Westpark</option>
+              <option>Schwanthalerhöhe</option>
+              <option>Neuhausen-Nymphenburg</option>
+              <option>Moosach</option>
+              <option>Milbertshofen-Am Hart</option>
+              <option>Schwabing-Freimann</option>
+              <option>Bogenhausen</option>
+              <option>Berg am Laim</option>
+              <option>Trudering-Riem</option>
+              <option>Ramersdorf-Perlach</option>
+              <option>Obergiesing-Fasangarten</option>
+              <option>Untergiesing-Harlaching</option>
+              <option>Thalkirchen-Obersendling-Forstenried-Fürstenried-Solln</option>
+              <option>Hadern</option>
+              <option>Pasing-Obermenzing</option>
+              <option>Aubing-Lochhausen-Langwied</option>
+              <option>Allach-Untermenzing</option>
+              <option>Feldmoching-Hasenbergl</option>
+              <option>Laim</option>
             </select>
           </div>
           <div>
@@ -153,11 +176,66 @@
 
     // --- Map ---
     const map = L.map('map').setView([48.137154, 11.576124], 12);
+    // Entfernt das "Leaflet"-Prefix (und damit auch das Flaggen-Symbol in manchen Builds)
+    map.attributionControl.setPrefix(false);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
     }).addTo(map);
     let markersLayer = L.layerGroup().addTo(map);
+    let highlightLayer = L.layerGroup().addTo(map);
+
+    // --- Echte Bezirksgrenzen (GeoJSON) ---
+    // Erwartet eine Datei ./muc_bezirke.geojson (MultiPolygon der 25 Stadtbezirke)
+    // Quelle: Open Data / OSM-Exports. Eigenschaften sollten einen Bezirksnamen enthalten.
+    let districtIndex = new Map(); // key: normalisierter Bezirksname -> GeoJSON Feature
+
+    // Mini‑Fallback: eingebettete, stark vereinfachte Polygone für die Vorschau
+    const MUC_BEZIRKE_MINI = {
+      "type":"FeatureCollection",
+      "features":[
+        {"type":"Feature","properties":{"name":"Altstadt-Lehel"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [11.5655,48.1474],[11.5855,48.1474],[11.5855,48.1274],[11.5655,48.1274],[11.5655,48.1474]
+          ]]}
+        },
+        {"type":"Feature","properties":{"name":"Sendling-Westpark"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [11.5000,48.1350],[11.5400,48.1350],[11.5400,48.1050],[11.5000,48.1050],[11.5000,48.1350]
+          ]]}
+        },
+        {"type":"Feature","properties":{"name":"Schwabing-West"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [11.5550,48.1780],[11.5850,48.1780],[11.5850,48.1550],[11.5550,48.1550],[11.5550,48.1780]
+          ]]}
+        }
+      ]
+    };
+
+    function normName(s){
+      return (s||'')
+        .toLowerCase()
+        .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+        .normalize('NFKD')
+        .replace(/[^a-z]+/g,'');
+    }
+
+    fetch('./muc_bezirke.geojson')
+      .then(r => r.ok ? r.json() : Promise.reject('not found'))
+      .then(geo => initDistrictIndex(geo))
+      .catch(() => { console.warn('[GeoJSON] ./muc_bezirke.geojson nicht gefunden – nutze eingebettete Vorschaugeometrien'); initDistrictIndex(MUC_BEZIRKE_MINI); });
+
+    function initDistrictIndex(geo){
+      const feats = Array.isArray(geo.features) ? geo.features : [];
+      districtIndex.clear();
+      feats.forEach(f => {
+        const props = f.properties||{};
+        const candidates = [props.name, props.NAME, props.bezirk, props.BEZIRK, props.GEN, props.gen, props.stadtbezirk];
+        const key = candidates.find(Boolean);
+        if(key){ districtIndex.set(normName(key), f); }
+      });
+      console.log('[GeoJSON] Bezirke geladen:', districtIndex.size);
+    }
 
     function renderMarkers(items){
       markersLayer.clearLayers();
@@ -214,6 +292,68 @@
     const district = document.getElementById('district');
     const sort = document.getElementById('sort');
 
+    // Sanitize: keine negativen Werte, keine e/+/− Eingaben, runde auf ganze €
+    maxRent.addEventListener('keydown', (e)=>{
+      if(['e','E','+','-'].includes(e.key)) e.preventDefault();
+    });
+    maxRent.addEventListener('input', ()=>{
+      const v = parseFloat(maxRent.value);
+      if(Number.isNaN(v)) return; // leeres Feld erlaubt
+      if(v < 0) maxRent.value = 0;
+    });
+    maxRent.addEventListener('blur', ()=>{
+      if(maxRent.value==='') return;
+      const v = Math.max(0, Math.floor(parseFloat(maxRent.value)||0));
+      maxRent.value = v;
+    });
+
+    function highlightDistrict(name, items){
+      highlightLayer.clearLayers();
+      if(!name) return;
+
+      // 1) Versuch: echtes GeoJSON-Polygon zum Bezirk anzeigen
+      const f = districtIndex.get(normName(name));
+      if(f){
+        const poly = L.geoJSON(f, {style:{color:'#ff6b6b', weight:2, fillOpacity:0}}).addTo(highlightLayer);
+        const b = poly.getBounds();
+        if(b.isValid()) map.fitBounds(b.pad(0.15));
+        return;
+      }
+
+      // 2) Fallback: auf Punkte zoomen und Rechteck zeichnen (wenn Demo-Daten vorhanden)
+      const pts = items.filter(o => o.district === name).map(o => [o.lat, o.lng]);
+      if(pts.length){
+        if(pts.length === 1){
+          const c = pts[0];
+          L.circle(c, {radius: 900, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
+          map.setView(c, 13); // Bezirksebene statt Straßenlevel
+        } else {
+          const bounds = L.latLngBounds(pts);
+          L.rectangle(bounds, {color:'#ff6b6b', weight:2, fill:false, dashArray:'6 4'}).addTo(highlightLayer);
+          map.fitBounds(bounds.pad(0.2));
+        }
+        return;
+      }
+
+      // 3) Letzter Fallback: Kreis um ungefähren Mittelpunkt
+      const centers = {
+        'altstadtlehel':[48.1374,11.5755], 'ludwigsvorstadtisarvorstadt':[48.1302,11.5589], 'maxvorstadt':[48.1497,11.5670],
+        'schwabingwest':[48.1655,11.5700], 'auhaidhausen':[48.1295,11.5975], 'sendling':[48.1115,11.5412],
+        'sendlingwestpark':[48.1200,11.5200], 'schwanthalerhoehe':[48.1390,11.5380], 'neuhausennymphenburg':[48.1550,11.5250],
+        'moosach':[48.1860,11.5080], 'milbertshofenamhart':[48.1960,11.5820], 'schwabingfreimann':[48.1860,11.6110],
+        'bogenhausen':[48.1490,11.6210], 'bergamlaim':[48.1280,11.6300], 'truderingriem':[48.1280,11.6900],
+        'ramersdorfperlach':[48.1000,11.6200], 'obergiesingfasangarten':[48.1060,11.6000], 'untergiesingharlaching':[48.1010,11.5660],
+        'thalkirchenobersendlingforstenriedfuerstenriedsolln':[48.0890,11.5200], 'hadern':[48.1110,11.4800],
+        'pasingobermenzing':[48.1500,11.4600], 'aubinglochhausenlangwied':[48.1600,11.4100], 'allachuntermenzing':[48.1900,11.4800],
+        'feldmochinghasenbergl':[48.2100,11.5500], 'laim':[48.1400,11.5100]
+      };
+      const c = centers[normName(name)];
+      if(c){
+        const circle = L.circle(c, {radius: 800, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
+        map.fitBounds(circle.getBounds().pad(0.2));
+      }
+    }
+
     function applyFilters(){
       let items = [...demoOffers];
       const qv = (q.value||'').toLowerCase();
@@ -233,11 +373,14 @@
       renderList(items);
       renderMarkers(items);
       renderKpis(items);
+      highlightDistrict(district.value, demoOffers); // Zoom & Outline für gewählten Stadtteil
     }
 
     document.getElementById('applyBtn').addEventListener('click', applyFilters);
     document.getElementById('resetBtn').addEventListener('click', () => {
-      q.value = 'München'; maxRent.value=''; rooms.value='2'; district.value=''; sort.value='recent'; applyFilters();
+      q.value = 'München'; maxRent.value=''; rooms.value='2'; district.value=''; sort.value='recent';
+      applyFilters();
+      highlightDistrict('', []); // Markierung entfernen
     });
 
     // Initial render
