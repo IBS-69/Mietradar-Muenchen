@@ -48,7 +48,19 @@
     input[type=number]::-webkit-outer-spin-button,
     input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number]{ -moz-appearance: textfield; }
-  </style>
+    /* Top-Angebote (oben, einheitliche Kacheln) */
+  .topbar{margin-top:14px;}
+  .tophead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .tophead h2{font-size:16px; margin:0; color:#c9d3ea}
+  .topscroller{display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scroll-snap-type:x mandatory}
+  .topcard{flex:0 0 240px; background:var(--panel); border:1px solid #1f2533; border-radius:14px; padding:10px; scroll-snap-align:start}
+  .topthumb{width:100%; height:140px; border-radius:10px; background:#0f1320; border:1px dashed #273043; display:flex; align-items:center; justify-content:center; font-size:12px; color:#65708a}
+  .topmeta{margin-top:8px; display:flex; align-items:center; justify-content:space-between; font-size:12px; color:#aab3c7}
+  .toptitle{margin:6px 0 0; font-size:14px; font-weight:700; color:var(--text); line-height:1.2; min-height:34px}
+  .skeleton{position:relative; overflow:hidden}
+  .skeleton::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.06), rgba(255,255,255,0)); transform:translateX(-100%); animation:shimmer 1.4s infinite}
+  @keyframes shimmer{100%{transform:translateX(100%)}}
+</style>
 </head>
 <body>
   <header>
@@ -62,6 +74,14 @@
   </header>
 
   <main class="wrap" style="margin-top:18px">
+    <!-- TOP-ANGEBOTE / Platzhalter (später über API befüllen) -->
+    <section class="card topbar" aria-label="Top-Angebote">
+      <div class="tophead">
+        <h2>Top‑Angebote</h2>
+        <span class="badge">extern • später per API</span>
+      </div>
+      <div class="topscroller" id="topOffers" role="list" aria-label="Top-Angebote Scroller"></div>
+    </section>
     <div class="grid">
       <!-- Sidebar: Filter -->
       <section class="card">
@@ -382,6 +402,53 @@ function applyFilters(){
       applyFilters();
       highlightDistrict('', []); // Markierung entfernen
     });
+
+    // --- Top‑Angebote: Platzhalter + (optional) Nestoria‑Hook ---
+    const TOP_PLACEHOLDERS = Array.from({length:8}, (_,i)=>({id:`ph${i+1}`}));
+
+    function renderTopOffers(items){
+      const el = document.getElementById('topOffers');
+      if(!el) return;
+      el.innerHTML = items.map(it => {
+        const isLive = !!it.title;
+        const price = isLive ? `${it.price ?? it.price_formatted ?? ''}` : '';
+        const rooms = isLive ? (it.rooms ?? it.bedroom_number ?? '') : '';
+        const district = isLive ? (it.district ?? it.keywords ?? '') : '';
+        const href = isLive ? (it.url ?? '#') : '#';
+        return `
+          <a class="topcard" role="listitem" ${isLive?`href="${href}" target="_blank" rel="noopener"`:''}>
+            <div class="topthumb ${isLive?'' :'skeleton'}">${isLive? 'Bild' : 'Wird geladen…'}</div>
+            <div class="topmeta">
+              <span>${isLive? (rooms? rooms+ ' Zi' : '') : '&nbsp;'}</span>
+              <span>${isLive? price : '&nbsp;'}</span>
+            </div>
+            <div class="toptitle">${isLive? (it.title ?? 'Wohnung') : 'Externer Eintrag'}</div>
+          </a>`;
+      }).join('');
+    }
+
+    // JSONP‑Hook für Nestoria (deaktiviert bis Backend/CORS geklärt)
+    // Beispielaufruf: nestoriaSearch({place:"muenchen", results:12});
+    function nestoriaSearch({place="muenchen", results=12}={}){
+      const cbName = `nestoriaCb_${Date.now()}`;
+      const url = `https://api.nestoria.de/api?encoding=json&pretty=1&action=search_listings&listing_type=rent&country=de&language=de&number_of_results=${results}&place_name=${encodeURIComponent(place)}&callback=${cbName}`;
+      window[cbName] = (data)=>{
+        try{
+          const listings = (data?.response?.listings||[]).map(x=>({
+            title: x.title, url: x.lister_url || x.url, price: x.price_formatted, rooms: x.bedroom_number, district: x.keywords
+          }));
+          renderTopOffers(listings);
+        } finally {
+          delete window[cbName];
+          script.remove();
+        }
+      };
+      const script = document.createElement('script');
+      script.src = url; document.body.appendChild(script);
+    }
+
+    // Erst Platzhalter anzeigen
+    renderTopOffers(TOP_PLACEHOLDERS);
 
     // Initial render
     applyFilters();
