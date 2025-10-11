@@ -433,76 +433,125 @@ function applyFilters(){
       highlightDistrict('', []); // Markierung entfernen
     });
 
-    // --- Top‑Angebote: Platzhalter + (optional) Nestoria‑Hook ---
-    const TOP_PLACEHOLDERS = Array.from({length:8}, (_,i)=>({id:`ph${i+1}`}));
+    // --- Top‑Angebote: Platzhalter + Render ---
+const TOP_PLACEHOLDERS = Array.from({length:8}, (_,i)=>({id:`ph${i+1}`}));
 
-    function renderTopOffers(items){
-      const el = document.getElementById('topOffers');
-      if(!el) return;
-      el.innerHTML = items.map(it => {
-        const isLive = !!it.title;
-        const price = isLive ? `${it.price ?? it.price_formatted ?? ''}` : '';
-        const rooms = isLive ? (it.rooms ?? it.bedroom_number ?? '') : '';
-        const district = isLive ? (it.district ?? it.keywords ?? '') : '';
-        const href = isLive ? (it.url ?? '#') : '#';
-        return `
-          <a class="topcard" role="listitem" ${isLive?`href="${href}" target="_blank" rel="noopener"`:''}>
-            <div class="topthumb ${isLive?'' :'skeleton'}">${isLive? 'Bild' : 'Wird geladen…'}</div>
-            <div class="topmeta">
-              <span>${isLive? (rooms? rooms+ ' Zi' : '') : '&nbsp;'}</span>
-              <span>${isLive? price : '&nbsp;'}</span>
-            </div>
-            <div class="toptitle">${isLive? (it.title ?? 'Wohnung') : 'Externer Eintrag'}</div>
-          </a>`;
-      }).join('');
+function renderTopOffers(items){
+  const el = document.getElementById('topOffers');
+  if(!el) return;
+  el.innerHTML = items.map(it => {
+    const isLive = !!it.title;
+    const price = isLive ? `${it.price ?? it.price_formatted ?? ''}` : '';
+    const rooms = isLive ? (it.rooms ?? it.bedroom_number ?? '') : '';
+    const href  = isLive ? (it.url ?? '#') : '#';
+    return `
+      <a class="topcard" role="listitem" ${isLive?`href="${href}" target="_blank" rel="noopener"`:''}>
+        <div class="topthumb ${isLive?'' :'skeleton'}">${isLive? 'Bild' : 'Wird geladen…'}</div>
+        <div class="topmeta">
+          <span>${isLive? (rooms? rooms+ ' Zi' : '') : '&nbsp;'}</span>
+          <span>${isLive? price : '&nbsp;'}</span>
+        </div>
+        <div class="toptitle">${isLive? (it.title ?? 'Wohnung') : 'Externer Eintrag'}</div>
+      </a>`;
+  }).join('');
+}
+
+// Erst Platzhalter anzeigen
+renderTopOffers(TOP_PLACEHOLDERS);
+
+// --- Status Helper ---
+const apiStatus   = document.getElementById('apiStatus');
+function setStatus(msg){ if(apiStatus) apiStatus.textContent = msg; }
+
+// --- Robuster JSONP‑Hook (Timeout + onerror + Logs) ---
+window.nestoriaSearch = function nestoriaSearch({place="muenchen", results=12}={}){
+  const cbName = `nestoriaCb_${Date.now()}`;
+  const url = `https://api.nestoria.de/api?encoding=json&pretty=1&action=search_listings&listing_type=rent&country=de&language=de&number_of_results=${results}&place_name=${encodeURIComponent(place)}&callback=${cbName}`;
+
+  setStatus(`Starte Anfrage an Nestoria (${place}, ${results}) …`);
+  console.log('[Nestoria] GET', url);
+
+  let finished = false; let script;
+  const cleanup = () => {
+    finished = true;
+    try { delete window[cbName]; } catch(e){}
+    if(script && script.parentNode) script.parentNode.removeChild(script);
+  };
+
+  // 6s Timeout → Mock-Daten
+  const to = setTimeout(()=>{
+    if(finished) return;
+    cleanup();
+    setStatus('Keine Antwort (Timeout). Zeige Mock-Daten.');
+    console.warn('[Nestoria] Timeout – zeige Mock-Daten');
+    renderTopOffers([
+      {title:'Beispiel: 2-Zi in Schwabing', price:'€ 1.450', rooms:2, url:'#'},
+      {title:'Beispiel: 3-Zi Ramersdorf',   price:'€ 1.780', rooms:3, url:'#'},
+      {title:'Beispiel: 1-Zi Maxvorstadt',  price:'€ 990',  rooms:1, url:'#'},
+      {title:'Beispiel: 4-Zi Sendling',     price:'€ 2.150', rooms:4, url:'#'},
+    ]);
+  }, 6000);
+
+  // JSONP Callback
+  window[cbName] = (data)=>{
+    if(finished) return;
+    clearTimeout(to);
+    try{
+      const listings = (data?.response?.listings||[]).map(x=>({
+        title: x.title,
+        url:   x.lister_url || x.url,
+        price: x.price_formatted,
+        rooms: x.bedroom_number
+      }));
+      setStatus(`Erhalten: ${listings.length} Einträge`);
+      console.log('[Nestoria] Response', data);
+      renderTopOffers(listings.length ? listings : [{title:'Keine Treffer', price:'', rooms:'', url:'#'}]);
+    } catch(err){
+      console.error('[Nestoria] Parse error', err);
+      setStatus('Antwort konnte nicht verarbeitet werden.');
+    } finally {
+      cleanup();
     }
+  };
 
-    // JSONP‑Hook für Nestoria (deaktiviert bis Backend/CORS geklärt)
-    // Beispielaufruf: nestoriaSearch({place:"muenchen", results:12});
-    function nestoriaSearch({place="muenchen", results=12}={}){
-      const cbName = `nestoriaCb_${Date.now()}`;
-      const url = `https://api.nestoria.de/api?encoding=json&pretty=1&action=search_listings&listing_type=rent&country=de&language=de&number_of_results=${results}&place_name=${encodeURIComponent(place)}&callback=${cbName}`;
-      window[cbName] = (data)=>{
-        try{
-          const listings = (data?.response?.listings||[]).map(x=>({
-            title: x.title, url: x.lister_url || x.url, price: x.price_formatted, rooms: x.bedroom_number, district: x.keywords
-          }));
-          renderTopOffers(listings);
-        } finally {
-          delete window[cbName];
-          script.remove();
-        }
-      };
-      const script = document.createElement('script');
-      script.src = url; document.body.appendChild(script);
-    }
+  // Script laden
+  script = document.createElement('script');
+  script.src = url;
+  script.async = true;
+  script.onerror = () => {
+    if(finished) return;
+    clearTimeout(to);
+    cleanup();
+    setStatus('Laden der API fehlgeschlagen (onerror). Eventuell Ad-Blocker?');
+    console.error('[Nestoria] Script onerror');
+  };
+  document.body.appendChild(script);
+};
 
-    // Erst Platzhalter anzeigen
+// --- API‑Sandbox: Buttons verdrahten ---
+const btnNestoriaTest  = document.getElementById('btnNestoriaTest');
+const btnNestoriaReset = document.getElementById('btnNestoriaReset');
+const apiPlace         = document.getElementById('apiPlace');
+const apiResults       = document.getElementById('apiResults');
+
+if(btnNestoriaTest){
+  btnNestoriaTest.addEventListener('click', ()=>{
+    setStatus('Frage Nestoria per JSONP an …');
+    window.nestoriaSearch({
+      place: (apiPlace?.value||'muenchen'),
+      results: parseInt(apiResults?.value||'12',10)
+    });
+  });
+}
+if(btnNestoriaReset){
+  btnNestoriaReset.addEventListener('click', ()=>{
     renderTopOffers(TOP_PLACEHOLDERS);
+    setStatus('Platzhalter wiederhergestellt.');
+  });
+}
 
-    // --- API‑Sandbox: Buttons verdrahten (Dev) ---
-    const btnNestoriaTest = document.getElementById('btnNestoriaTest');
-    const btnNestoriaReset = document.getElementById('btnNestoriaReset');
-    const apiPlace = document.getElementById('apiPlace');
-    const apiResults = document.getElementById('apiResults');
-    const apiStatus = document.getElementById('apiStatus');
-    if(btnNestoriaTest){
-      btnNestoriaTest.addEventListener('click', ()=>{
-        apiStatus.textContent = 'Frage Nestoria per JSONP an…';
-        try{
-          nestoriaSearch({place: (apiPlace?.value||'muenchen'), results: parseInt(apiResults?.value||'12',10)});
-          apiStatus.textContent = 'Anfrage gesendet. Wenn CORS/Netzwerk ok ist, erscheinen die Karten oben.';
-        }catch(err){
-          console.error(err); apiStatus.textContent = 'Fehler beim Starten der Abfrage';
-        }
-      });
-    }
-    if(btnNestoriaReset){
-      btnNestoriaReset.addEventListener('click', ()=>{ renderTopOffers(TOP_PLACEHOLDERS); apiStatus.textContent = 'Platzhalter wiederhergestellt.'; });
-    }
-
-    // Initial render
-    applyFilters();
+// Initial render
+applyFilters();
 
     // --- API-Hook (später) ---
     // fetch('/api/offers?city=muenchen').then(r=>r.json()).then(data=>{ /* map auf schema, dann applyFilters() */ })
