@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MietRadar – API Admin</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <style>
+    :root{ --bg:#0b0d12; --panel:#141822; --muted:#8b94a7; --text:#e6eaf2; --accent:#5de4c7; --accent2:#7aa2f7; --danger:#ff6b6b; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; color:var(--text); background:linear-gradient(180deg,#0b0d12 0%, #0e111a 100%);} 
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    h1{font-size:22px; margin:0 0 12px 0}
+    .grid{display:grid; grid-template-columns: 360px 1fr; gap:16px}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;}}
+    .card{background:var(--panel); border:1px solid #1f2533; border-radius:14px; padding:14px; box-shadow:0 6px 24px rgba(0,0,0,.25)}
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+    input, select, textarea{width:100%; padding:10px 12px; border-radius:10px; border:1px solid #273043; background:#0f1320; color:var(--text)}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .btn{display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, var(--accent2), var(--accent)); color:#0a0f1a; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer}
+    .btn.secondary{background:#0f1320; color:var(--text); border:1px solid #273043}
+    .badge{display:inline-block; padding:4px 8px; border-radius:999px; background:#111524; border:1px solid #273043; font-size:11px}
+    .list{display:grid; gap:10px}
+    .item{display:grid; grid-template-columns:100px 1fr; gap:12px; background:#0f1320; border:1px solid #273043; border-radius:12px; padding:10px}
+    .thumb{background:#111524; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12px; color:#65708a}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:#aab3c7}
+    .muted{color:var(--muted); font-size:12px}
+    .ok{color:#6cf3bb}
+    .err{color:var(--danger)}
+    pre{white-space:pre-wrap; word-break:break-word; background:#0f1320; border:1px solid #273043; border-radius:10px; padding:10px; font-size:12px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px">
+      <h1>API‑Admin <span class="badge">separater Bereich</span></h1>
+      <a class="badge" href="./index.html">Zurück zur Website</a>
+    </header>
+
+    <div class="grid">
+      <!-- Linke Spalte: Einstellungen / Keys -->
+      <section class="card">
+        <h2 style="margin:0 0 8px">Verbindungen</h2>
+        <p class="muted">Lege hier Keys & Standard‑Parameter ab. Keys werden <b>nur lokal</b> (localStorage) gespeichert. Für Produktion bitte Proxy/Backend nutzen.</p>
+
+        <label for="prov">Provider</label>
+        <select id="prov">
+          <option value="nestoria" selected>Nestoria (ohne Key)</option>
+          <option value="generic">Generischer REST‑Provider (mit Key)</option>
+        </select>
+
+        <div class="row">
+          <div>
+            <label for="place">Ort / place_name</label>
+            <input id="place" value="muenchen" placeholder="muenchen, schwabing ..."/>
+          </div>
+          <div>
+            <label for="limit">Anzahl Ergebnisse</label>
+            <select id="limit">
+              <option>8</option>
+              <option selected>12</option>
+              <option>16</option>
+              <option>24</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="apiKey">API‑Key (optional)</label>
+        <input id="apiKey" placeholder="Dein API Key"/>
+
+        <div style="display:flex; gap:10px; margin-top:12px">
+          <button class="btn" id="btnSaveCfg">Speichern</button>
+          <button class="btn secondary" id="btnClearCfg">Löschen</button>
+        </div>
+        <div id="cfgStatus" class="muted" style="margin-top:8px"></div>
+      </section>
+
+      <!-- Rechte Spalte: Testen / Normalisieren / Publizieren -->
+      <section class="card">
+        <h2 style="margin:0 0 8px">Abruf testen & veröffentlichen</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" id="btnTest">Abruf testen</button>
+          <button class="btn secondary" id="btnPublish">Top‑Angebote auf Website veröffentlichen</button>
+        </div>
+        <p class="muted" style="margin:8px 0 12px">„Veröffentlichen“ speichert normalisierte Angebote unter <code>localStorage['mietradar:topOffers']</code>. Die Index‑Seite kann das später lesen.</p>
+
+        <div id="testStatus" class="muted"></div>
+        <div id="results" class="list" style="margin-top:12px"></div>
+
+        <details style="margin-top:14px">
+          <summary>Integration über Backend/Proxy (empfohlen)</summary>
+          <p class="muted">Beispiel: Express‑Proxy <code>POST /api/admin/top-offers</code> nimmt ein Array deiner Angebote an und stellt es als <code>GET /api/top-offers.json</code> öffentlich bereit.</p>
+          <pre>// server.js (Kurzfassung)
+import express from 'express';
+import fs from 'fs';
+const app = express();
+app.use(express.json());
+app.post('/api/admin/top-offers', (req,res)=>{ fs.writeFileSync('public/top-offers.json', JSON.stringify(req.body)); res.json({ok:true}); });
+app.get('/api/top-offers.json', (req,res)=>{ res.sendFile(process.cwd()+ '/public/top-offers.json'); });
+app.listen(3000);
+// Frontend lädt dann: fetch('/api/top-offers.json').then(r=>r.json())</pre>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ==== Storage Helpers ====
+    const KEY_CFG = 'mietradar:cfg';
+    const KEY_TOP = 'mietradar:topOffers';
+    function saveCfg(cfg){ localStorage.setItem(KEY_CFG, JSON.stringify(cfg)); }
+    function loadCfg(){ try{ return JSON.parse(localStorage.getItem(KEY_CFG)||'{}'); }catch{return {}} }
+
+    // ==== UI Bindings ====
+    const prov = document.getElementById('prov');
+    const place = document.getElementById('place');
+    const limit = document.getElementById('limit');
+    const apiKey = document.getElementById('apiKey');
+    const cfgStatus = document.getElementById('cfgStatus');
+    const testStatus = document.getElementById('testStatus');
+    const resultsEl = document.getElementById('results');
+
+    // Load initial cfg
+    (function init(){
+      const cfg = loadCfg();
+      if(cfg.prov) prov.value = cfg.prov;
+      if(cfg.place) place.value = cfg.place;
+      if(cfg.limit) limit.value = String(cfg.limit);
+      if(cfg.apiKey) apiKey.value = cfg.apiKey;
+    })();
+
+    document.getElementById('btnSaveCfg').addEventListener('click',()=>{
+      saveCfg({ prov:prov.value, place:place.value, limit:parseInt(limit.value,10), apiKey:apiKey.value });
+      cfgStatus.textContent = 'Gespeichert (localStorage).';
+    });
+    document.getElementById('btnClearCfg').addEventListener('click',()=>{
+      localStorage.removeItem(KEY_CFG); localStorage.removeItem(KEY_TOP);
+      cfgStatus.textContent = 'Konfiguration & veröffentlichte Top‑Angebote gelöscht.'; resultsEl.innerHTML=''; testStatus.textContent='';
+    });
+
+    // ==== Provider Clients ====
+    async function fetchNestoria({place, limit}){ // JSON via CORS/JSONP – wir versuchen CORS zuerst
+      const url = `https://api.nestoria.de/api?encoding=json&pretty=1&action=search_listings&listing_type=rent&country=de&language=de&number_of_results=${encodeURIComponent(limit)}&place_name=${encodeURIComponent(place)}`;
+      try{
+        const r = await fetch(url); // wenn CORS blockiert, fangen wir unten ab
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const data = await r.json();
+        return (data?.response?.listings||[]).map(x=>({
+          title: x.title,
+          price: x.price_formatted || (x.price? x.price+ ' €':''),
+          rooms: x.bedroom_number || x.room_number || null,
+          size: x.size || null,
+          district: x.keywords || '',
+          url: x.lister_url || x.url || '#',
+          image: x.img_url || x.thumb_url || null,
+          lat: x.latitude || null,
+          lng: x.longitude || null,
+          source: 'nestoria'
+        }));
+      }catch(err){
+        // Fallback JSONP, falls CORS blockiert (nur Dev!)
+        console.warn('CORS/Fetch fehlgeschlagen, versuche JSONP', err);
+        return new Promise((resolve,reject)=>{
+          const cb = 'nr_cb_'+Date.now();
+          window[cb] = (data)=>{ try{ resolve((data?.response?.listings||[]).map(x=>({
+            title: x.title,
+            price: x.price_formatted || (x.price? x.price+ ' €':''),
+            rooms: x.bedroom_number || x.room_number || null,
+            size: x.size || null,
+            district: x.keywords || '',
+            url: x.lister_url || x.url || '#',
+            image: x.img_url || x.thumb_url || null,
+            lat: x.latitude || null,
+            lng: x.longitude || null,
+            source: 'nestoria'
+          }))); } finally { delete window[cb]; s.remove(); } };
+          const s = document.createElement('script');
+          s.src = `${url}&callback=${cb}`; s.onerror = ()=>reject(new Error('JSONP Fehler')); document.body.appendChild(s);
+        });
+      }
+    }
+
+    async function fetchGeneric({url, apiKey}){
+      // Beispiel für Provider, die einen Key verlangen (per Header). Hier nur Skizze.
+      const r = await fetch(url, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data = await r.json();
+      // TODO: auf dein internes Schema mappen
+      return Array.isArray(data)? data : (data.items||[]);
+    }
+
+    function renderResults(items){
+      resultsEl.innerHTML = items.map(o=>`
+        <article class="item">
+          <div class="thumb">${o.image? `<img src="${o.image}" alt="" style="max-width:100%;max-height:100%;object-fit:cover;border-radius:8px"/>`:'Bild'}</div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
+              <h3 style="margin:0; font-size:16px">${o.title||'Wohnung'}</h3>
+              <a class="badge" href="${o.url||'#'}" target="_blank" rel="noopener">Quelle</a>
+            </div>
+            <div class="meta">
+              <span>${o.rooms? o.rooms+' Zi':''}</span>
+              <span>${o.size? o.size+' m²':''}</span>
+              <span>${o.price||''}</span>
+              <span>${o.district||''}</span>
+              <span>${o.source? 'via '+o.source:''}</span>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    document.getElementById('btnTest').addEventListener('click', async ()=>{
+      testStatus.textContent = 'Lade…'; resultsEl.innerHTML='';
+      const cfg = loadCfg();
+      try{
+        let items = [];
+        if((cfg.prov||'nestoria') === 'nestoria'){
+          items = await fetchNestoria({ place: cfg.place||'muenchen', limit: cfg.limit||12 });
+        } else {
+          // Beispiel: fetchGeneric({url: cfg.url, apiKey: cfg.apiKey})
+          throw new Error('Generic‑Provider noch nicht konfiguriert.');
+        }
+        renderResults(items);
+        testStatus.innerHTML = `<span class="ok">${items.length} Einträge geladen.</span>`;
+        // Zwischenspeichern fürs Veröffentlichen
+        window.__lastItems = items;
+      } catch(err){
+        console.error(err);
+        testStatus.innerHTML = `<span class="err">Fehler: ${err.message}</span>`;
+      }
+    });
+
+    document.getElementById('btnPublish').addEventListener('click', async ()=>{
+      const items = window.__lastItems || [];
+      if(!items.length){ testStatus.innerHTML = '<span class="err">Keine Ergebnisse zum Veröffentlichen. Bitte zuerst „Abruf testen“.</span>'; return; }
+      // 1) Client‑only Weg: localStorage – Index kann das später laden
+      localStorage.setItem(KEY_TOP, JSON.stringify(items));
+      testStatus.innerHTML = '<span class="ok">Veröffentlicht nach localStorage (mietradar:topOffers).</span>';
+
+      // 2) Optionaler Backend‑Weg (auskommentiert):
+      // await fetch('/api/admin/top-offers', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(items) });
+      // testStatus.innerHTML = '<span class="ok">Zum Backend veröffentlicht (top-offers.json).</span>';
+    });
+  </script>
+</body>
+</html>
