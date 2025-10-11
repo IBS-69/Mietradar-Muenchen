@@ -214,347 +214,255 @@
     crossorigin=""
   ></script>
   <script>
-    // --- Demo-Daten (ersetzbar durch API) ---
-    const demoOffers = [
-      {id:1, title:"2-Zi Altbau nahe Hohenzollernplatz", price:1350, size:48, rooms:2, district:"Schwabing-West", lat:48.1655, lng:11.5722, date:"2025-10-08"},
-      {id:2, title:"3-Zi Neubau, Balkon, U2 Josephsburg", price:1750, size:72, rooms:3, district:"Au-Haidhausen", lat:48.1258, lng:11.6077, date:"2025-10-09"},
-      {id:3, title:"1,5-Zi Studio Maxvorstadt", price:990, size:30, rooms:1.5, district:"Maxvorstadt", lat:48.1497, lng:11.5670, date:"2025-10-07"},
-      {id:4, title:"Familienfreundlich am Rotkreuzplatz", price:1950, size:83, rooms:3, district:"Neuhausen-Nymphenburg", lat:48.1560, lng:11.5325, date:"2025-10-09"},
-      {id:5, title:"1-Zi Nähe Gärtnerplatz", price:1200, size:28, rooms:1, district:"Altstadt-Lehel", lat:48.1340, lng:11.5796, date:"2025-10-06"},
-      {id:6, title:"4-Zi Dachgeschoss Sendling", price:2200, size:96, rooms:4, district:"Sendling", lat:48.1115, lng:11.5412, date:"2025-10-08"}
-    ].map(o => ({...o, pricePerSqm: +(o.price / o.size).toFixed(2)}));
+    
+/* ------- Basis-Daten (Demo bis echte API kommt) ------- */
+const demoOffers = [
+  {id:1, title:"2-Zi Altbau nahe Hohenzollernplatz", price:1350, size:48, rooms:2, district:"Schwabing-West", lat:48.1655, lng:11.5722, date:"2025-10-08"},
+  {id:2, title:"3-Zi Neubau, Balkon, U2 Josephsburg", price:1750, size:72, rooms:3, district:"Au-Haidhausen", lat:48.1258, lng:11.6077, date:"2025-10-09"},
+  {id:3, title:"1,5-Zi Studio Maxvorstadt", price:990, size:30, rooms:1.5, district:"Maxvorstadt", lat:48.1497, lng:11.5670, date:"2025-10-07"},
+  {id:4, title:"Familienfreundlich am Rotkreuzplatz", price:1950, size:83, rooms:3, district:"Neuhausen-Nymphenburg", lat:48.1560, lng:11.5325, date:"2025-10-09"},
+  {id:5, title:"1-Zi Nähe Gärtnerplatz", price:1200, size:28, rooms:1, district:"Altstadt-Lehel", lat:48.1340, lng:11.5796, date:"2025-10-06"},
+  {id:6, title:"4-Zi Dachgeschoss Sendling", price:2200, size:96, rooms:4, district:"Sendling", lat:48.1115, lng:11.5412, date:"2025-10-08"}
+].map(o => ({...o, pricePerSqm: +(o.price / o.size).toFixed(2)}));
 
-    // --- Map ---
-    const map = L.map('map').setView([48.137154, 11.576124], 12);
-    // Entfernt das "Leaflet"-Prefix (und damit auch das Flaggen-Symbol in manchen Builds)
-    map.attributionControl.setPrefix(false);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-    }).addTo(map);
-    let markersLayer = L.layerGroup().addTo(map);
-    let highlightLayer = L.layerGroup().addTo(map);
+/* ------- Leaflet Karte ------- */
+const map = L.map('map').setView([48.137154, 11.576124], 12);
+map.attributionControl.setPrefix(false);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+}).addTo(map);
+let markersLayer = L.layerGroup().addTo(map);
+let highlightLayer = L.layerGroup().addTo(map);
 
-    // --- Bezirks-Geometrien laden (lokale Datei → WFS → Mini‑Fallback) ---
-    // 1) Versuche zuerst eine lokale Datei ./muc_bezirke.geojson (im Repo ablegen!)
-    // 2) Falls nicht vorhanden, WFS der Stadt München (GeoJSON, WGS84)
-    const LOCAL_GEOJSON = './muc_bezirke.geojson';
-    const WFS_URL = 'https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:vablock_stadtbezirke_opendata&outputFormat=application/json&srsName=EPSG:4326';
+/* ------- Bezirks-Geometrien laden (lokal → WFS → Mini) ------- */
+const LOCAL_GEOJSON = './muc_bezirke.geojson';
+const WFS_URL = 'https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:vablock_stadtbezirke_opendata&outputFormat=application/json&srsName=EPSG:4326';
+let districtIndex = new Map();
+const MUC_BEZIRKE_MINI = {"type":"FeatureCollection","features":[
+  {"type":"Feature","properties":{"name":"Altstadt-Lehel"},"geometry":{"type":"Polygon","coordinates":[[[11.5655,48.1474],[11.5855,48.1474],[11.5855,48.1274],[11.5655,48.1274],[11.5655,48.1474]]]}},
+  {"type":"Feature","properties":{"name":"Sendling-Westpark"},"geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1350],[11.5400,48.1350],[11.5400,48.1050],[11.5000,48.1050],[11.5000,48.1350]]]}},
+  {"type":"Feature","properties":{"name":"Schwabing-West"},"geometry":{"type":"Polygon","coordinates":[[[11.5550,48.1780],[11.5850,48.1780],[11.5850,48.1550],[11.5550,48.1550],[11.5550,48.1780]]]}},
+  {"type":"Feature","properties":{"name":"Laim"},"geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1450],[11.5350,48.1450],[11.5350,48.1250],[11.5000,48.1250],[11.5000,48.1450]]]}}
+]};
+const normName = s => (s||'').toLowerCase()
+  .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+  .normalize('NFKD').replace(/[^a-z]+/g,'');
+function initDistrictIndex(geo){
+  const feats = Array.isArray(geo.features) ? geo.features : [];
+  districtIndex.clear();
+  feats.forEach(f=>{
+    const p = f.properties||{};
+    const key = [p.name,p.NAME,p.bezirk,p.BEZIRK,p.GEN,p.gen,p.stadtbezirk].find(Boolean);
+    if(key) districtIndex.set(normName(key), f);
+  });
+}
+fetch(LOCAL_GEOJSON).then(r=>r.ok?r.json():Promise.reject())
+  .then(initDistrictIndex)
+  .catch(()=>fetch(WFS_URL).then(r=>r.ok?r.json():Promise.reject())
+    .then(initDistrictIndex)
+    .catch(()=>initDistrictIndex(MUC_BEZIRKE_MINI))
+  );
 
-    let districtIndex = new Map(); // key: normalisierter Name -> Feature
+/* ------- Render Helpers (Liste / KPIs / Marker) ------- */
+const resultsEl = document.getElementById('results');
+const kpiCount = document.getElementById('kpiCount');
+const kpiMedian = document.getElementById('kpiMedian');
+const kpiRooms = document.getElementById('kpiRooms');
 
-    // Mini‑Fallback: stark vereinfachte Demo‑Geometrien (nur ein paar Bezirke)
-    const MUC_BEZIRKE_MINI = {
-      "type":"FeatureCollection",
-      "features":[
-        {"type":"Feature","properties":{"name":"Altstadt-Lehel"},
-          "geometry":{"type":"Polygon","coordinates":[[[11.5655,48.1474],[11.5855,48.1474],[11.5855,48.1274],[11.5655,48.1274],[11.5655,48.1474]]]}}
-        ,{"type":"Feature","properties":{"name":"Sendling-Westpark"},
-          "geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1350],[11.5400,48.1350],[11.5400,48.1050],[11.5000,48.1050],[11.5000,48.1350]]]}}
-        ,{"type":"Feature","properties":{"name":"Schwabing-West"},
-          "geometry":{"type":"Polygon","coordinates":[[[11.5550,48.1780],[11.5850,48.1780],[11.5850,48.1550],[11.5550,48.1550],[11.5550,48.1780]]]}}
-        ,{"type":"Feature","properties":{"name":"Laim"},
-          "geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1450],[11.5350,48.1450],[11.5350,48.1250],[11.5000,48.1250],[11.5000,48.1450]]]}}
-      ]
-    };
+const median = arr => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
 
-    function normName(s){
-      return (s||'')
-        .toLowerCase()
-        .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
-        .normalize('NFKD')
-        .replace(/[^a-z]+/g,'');
-    }
+function renderList(items){
+  resultsEl.innerHTML = items.map(o => `
+    <article class="item" aria-label="Angebot">
+      <div class="thumb">${o.district}</div>
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
+          <h3 style="margin:0; font-size:16px">${o.title}</h3>
+          <div class="badge">${new Date(o.date).toLocaleDateString('de-DE')}</div>
+        </div>
+        <div class="meta">
+          <span>${o.rooms} Zi</span>
+          <span>${o.size} m²</span>
+          <span><b>${o.price} €</b> (${o.pricePerSqm} €/m²)</span>
+          <span>${o.district}</span>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+function renderKpis(items){
+  kpiCount.textContent = items.length;
+  const med = median(items.map(o=>o.pricePerSqm));
+  kpiMedian.textContent = med ? med.toFixed(0) : '–';
+  const avgRooms = items.length ? (items.reduce((s,o)=>s+o.rooms,0)/items.length) : 0;
+  kpiRooms.textContent = avgRooms ? avgRooms.toFixed(1) : '–';
+}
+function renderMarkers(items){
+  markersLayer.clearLayers();
+  items.forEach(o=>{
+    const m = L.marker([o.lat,o.lng]).bindPopup(
+      `<b>${o.title}</b><br/>${o.rooms} Zi · ${o.size} m²<br/><b>${o.price} €</b> (${o.pricePerSqm} €/m²)<br/><small>${o.district}</small>`
+    );
+    markersLayer.addLayer(m);
+  });
+}
 
-    function initDistrictIndex(geo){
-      const feats = Array.isArray(geo.features) ? geo.features : [];
-      districtIndex.clear();
-      feats.forEach(f => {
-        const p = f.properties||{};
-        const key = [p.name,p.NAME,p.bezirk,p.BEZIRK,p.GEN,p.gen,p.stadtbezirk].find(Boolean);
-        if(key){ districtIndex.set(normName(key), f); }
-      });
-      console.log('[GeoJSON] Bezirke geladen:', districtIndex.size);
-    }
+/* ------- Filtering ------- */
+const q = document.getElementById('q');
+const maxRent = document.getElementById('maxRent');
+const rooms = document.getElementById('rooms');
+const district = document.getElementById('district');
+const sort = document.getElementById('sort');
 
-    // Laden mit Fallback: lokal → WFS → Mini
-    fetch(LOCAL_GEOJSON).then(r => r.ok? r.json() : Promise.reject('local-missing'))
-      .then(geo => initDistrictIndex(geo))
-      .catch(() => fetch(WFS_URL, {mode:'cors'})
-        .then(r => r.ok? r.json() : Promise.reject('wfs-failed'))
-        .then(geo => initDistrictIndex(geo))
-        .catch(err => { console.warn('[GeoJSON] Fallback Mini, Grund:', err); initDistrictIndex(MUC_BEZIRKE_MINI); })
-      );
+maxRent.addEventListener('keydown', e=>{ if(['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+maxRent.addEventListener('input', ()=>{ const v=parseFloat(maxRent.value); if(Number.isNaN(v)) return; if(v<0) maxRent.value=0; });
+maxRent.addEventListener('blur', ()=>{ if(maxRent.value==='') return; const v=Math.max(0, Math.floor(parseFloat(maxRent.value)||0)); maxRent.value=v; });
 
-    function renderMarkers(items){
-      markersLayer.clearLayers();
-      items.forEach(o => {
-        const m = L.marker([o.lat, o.lng]).bindPopup(
-          `<b>${o.title}</b><br/>${o.rooms} Zi · ${o.size} m²<br/><b>${o.price} €</b> (${o.pricePerSqm} €/m²)<br/><small>${o.district}</small>`
-        );
-        markersLayer.addLayer(m);
-      });
-    }
+function highlightDistrict(name, items){
+  highlightLayer.clearLayers();
+  if(!name) return;
+  const feat = districtIndex.get(normName(name));
+  if(feat){
+    const layer = L.geoJSON(feat,{style:{color:'#ff6b6b',weight:2,fillOpacity:0}}).addTo(highlightLayer);
+    const b = layer.getBounds(); if(b && b.isValid()) map.fitBounds(b.pad(0.12));
+    return;
+  }
+  const centers = {
+    'altstadtlehel':[48.1374,11.5755], 'ludwigsvorstadtisarvorstadt':[48.1302,11.5589], 'maxvorstadt':[48.1497,11.5670],
+    'schwabingwest':[48.1655,11.5700], 'auhaidhausen':[48.1336,11.5937], 'sendling':[48.1115,11.5412],
+    'sendlingwestpark':[48.1200,11.5200], 'schwanthalerhoehe':[48.1390,11.5380], 'neuhausennymphenburg':[48.1550,11.5250],
+    'moosach':[48.1860,11.5080], 'milbertshofenamhart':[48.1960,11.5820], 'schwabingfreimann':[48.1860,11.6110],
+    'bogenhausen':[48.1490,11.6210], 'bergamlaim':[48.1280,11.6300], 'truderingriem':[48.1280,11.6900],
+    'ramersdorfperlach':[48.1000,11.6200], 'obergiesingfasangarten':[48.1060,11.6000], 'untergiesingharlaching':[48.1010,11.5660],
+    'thalkirchenobersendlingforstenriedfuerstenriedsolln':[48.0890,11.5200], 'hadern':[48.1110,11.4800],
+    'pasingobermenzing':[48.1500,11.4600], 'aubinglochhausenlangwied':[48.1600,11.4100], 'allachuntermenzing':[48.1900,11.4800],
+    'feldmochinghasenbergl':[48.2100,11.5500], 'laim':[48.1400,11.5100]
+  };
+  const c = centers[normName(name)];
+  if(c){
+    const circle = L.circle(c,{radius:800,color:'#ff6b6b',weight:2,fill:false}).addTo(highlightLayer);
+    map.fitBounds(circle.getBounds().pad(0.2));
+    return;
+  }
+  const pts = items.filter(o=>o.district===name).map(o=>[o.lat,o.lng]);
+  if(pts.length){
+    if(pts.length===1){ const p=pts[0]; L.circle(p,{radius:900,color:'#ff6b6b',weight:2,fill:false}).addTo(highlightLayer); map.setView(p,13); }
+    else { const b=L.latLngBounds(pts); L.rectangle(b,{color:'#ff6b6b',weight:2,fill:false,dashArray:'6 4'}).addTo(highlightLayer); map.fitBounds(b.pad(0.2)); }
+  }
+}
 
-    // --- UI Rendering ---
-    const resultsEl = document.getElementById('results');
-    const kpiCount = document.getElementById('kpiCount');
-    const kpiMedian = document.getElementById('kpiMedian');
-    const kpiRooms = document.getElementById('kpiRooms');
-
-    function median(arr){
-      if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const mid=Math.floor(s.length/2); return s.length%2? s[mid] : (s[mid-1]+s[mid])/2
-    }
-
-    function renderList(items){
-      resultsEl.innerHTML = items.map(o => `
-        <article class="item" aria-label="Angebot">
-          <div class="thumb">${o.district}</div>
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
-              <h3 style="margin:0; font-size:16px">${o.title}</h3>
-              <div class="badge">${new Date(o.date).toLocaleDateString('de-DE')}</div>
-            </div>
-            <div class="meta">
-              <span>${o.rooms} Zi</span>
-              <span>${o.size} m²</span>
-              <span><b>${o.price} €</b> (${o.pricePerSqm} €/m²)</span>
-              <span>${o.district}</span>
-            </div>
-          </div>
-        </article>
-      `).join('');
-    }
-
-    function renderKpis(items){
-      kpiCount.textContent = items.length;
-      const med = median(items.map(o=>o.pricePerSqm));
-      kpiMedian.textContent = med ? med.toFixed(0) : '–';
-      const avgRooms = items.length ? (items.reduce((s,o)=>s+o.rooms,0)/items.length) : 0;
-      kpiRooms.textContent = avgRooms ? avgRooms.toFixed(1) : '–';
-    }
-
-    // --- Filtering ---
-    const q = document.getElementById('q');
-    const maxRent = document.getElementById('maxRent');
-    const rooms = document.getElementById('rooms');
-    const district = document.getElementById('district');
-    const sort = document.getElementById('sort');
-
-    // Sanitize: keine negativen Werte, keine e/+/− Eingaben, runde auf ganze €
-    maxRent.addEventListener('keydown', (e)=>{
-      if(['e','E','+','-'].includes(e.key)) e.preventDefault();
-    });
-    maxRent.addEventListener('input', ()=>{
-      const v = parseFloat(maxRent.value);
-      if(Number.isNaN(v)) return; // leeres Feld erlaubt
-      if(v < 0) maxRent.value = 0;
-    });
-    maxRent.addEventListener('blur', ()=>{
-      if(maxRent.value==='') return;
-      const v = Math.max(0, Math.floor(parseFloat(maxRent.value)||0));
-      maxRent.value = v;
-    });
-
-    function highlightDistrict(name, items){
-      highlightLayer.clearLayers();
-      if(!name) return;
-
-      // A) Bevorzugt: echtes GeoJSON‑Feature als rote Outline
-      const feat = districtIndex.get(normName(name));
-      if(feat){
-        const layer = L.geoJSON(feat, {style:{color:'#ff6b6b', weight:2, fillOpacity:0}}).addTo(highlightLayer);
-        const b = layer.getBounds();
-        if(b && b.isValid()) { map.fitBounds(b.pad(0.12)); }
-        return;
-      }
-
-      // B) Fallbacks
-      // 1) Mittelpunkt/Heuristik pro Bezirk
-      const centers = {
-        'altstadtlehel':[48.1374,11.5755], 'ludwigsvorstadtisarvorstadt':[48.1302,11.5589], 'maxvorstadt':[48.1497,11.5670],
-        'schwabingwest':[48.1655,11.5700], 'auhaidhausen':[48.1336,11.5937], 'sendling':[48.1115,11.5412],
-        'sendlingwestpark':[48.1200,11.5200], 'schwanthalerhoehe':[48.1390,11.5380], 'neuhausennymphenburg':[48.1550,11.5250],
-        'moosach':[48.1860,11.5080], 'milbertshofenamhart':[48.1960,11.5820], 'schwabingfreimann':[48.1860,11.6110],
-        'bogenhausen':[48.1490,11.6210], 'bergamlaim':[48.1280,11.6300], 'truderingriem':[48.1280,11.6900],
-        'ramersdorfperlach':[48.1000,11.6200], 'obergiesingfasangarten':[48.1060,11.6000], 'untergiesingharlaching':[48.1010,11.5660],
-        'thalkirchenobersendlingforstenriedfuerstenriedsolln':[48.0890,11.5200], 'hadern':[48.1110,11.4800],
-        'pasingobermenzing':[48.1500,11.4600], 'aubinglochhausenlangwied':[48.1600,11.4100], 'allachuntermenzing':[48.1900,11.4800],
-        'feldmochinghasenbergl':[48.2100,11.5500], 'laim':[48.1400,11.5100]
-      };
-      const key = normName(name);
-      const c = centers[key];
-      if(c){
-        const circle = L.circle(c, {radius: 800, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
-        map.fitBounds(circle.getBounds().pad(0.2));
-        return;
-      }
-
-      // 2) Notfalls: auf vorhandene Trefferpunkte zoomen
-      const pts = items.filter(o => o.district === name).map(o => [o.lat, o.lng]);
-      if(pts.length){
-        if(pts.length === 1){
-          const p = pts[0];
-          L.circle(p, {radius: 900, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
-          map.setView(p, 13);
-        } else {
-          const bounds = L.latLngBounds(pts);
-          L.rectangle(bounds, {color:'#ff6b6b', weight:2, fill:false, dashArray:'6 4'}).addTo(highlightLayer);
-          map.fitBounds(bounds.pad(0.2));
-        }
-      }
-    }
 function applyFilters(){
-      let items = [...demoOffers];
-      const qv = (q.value||'').toLowerCase();
-      if(qv){ items = items.filter(o => o.title.toLowerCase().includes(qv) || o.district.toLowerCase().includes(qv) ); }
-      const max = parseFloat(maxRent.value);
-      if(!isNaN(max)){ items = items.filter(o => o.price <= max); }
-      const minRooms = parseFloat(rooms.value);
-      if(minRooms>0){ items = items.filter(o => o.rooms >= minRooms); }
-      if(district.value){ items = items.filter(o => o.district === district.value); }
-      switch(sort.value){
-        case 'priceAsc': items.sort((a,b)=>a.price-b.price); break;
-        case 'priceDesc': items.sort((a,b)=>b.price-a.price); break;
-        case 'sqmAsc': items.sort((a,b)=>a.pricePerSqm-b.pricePerSqm); break;
-        case 'sqmDesc': items.sort((a,b)=>b.pricePerSqm-a.pricePerSqm); break;
-        default: items.sort((a,b)=> new Date(b.date)-new Date(a.date));
-      }
-      renderList(items);
-      renderMarkers(items);
-      renderKpis(items);
-      highlightDistrict(district.value, demoOffers); // Zoom & Outline für gewählten Stadtteil
-    }
+  let items = [...demoOffers];
+  const qv = (q.value||'').toLowerCase();
+  if(qv) items = items.filter(o => o.title.toLowerCase().includes(qv) || o.district.toLowerCase().includes(qv));
+  const max = parseFloat(maxRent.value);
+  if(!isNaN(max)) items = items.filter(o => o.price <= max);
+  const minRooms = parseFloat(rooms.value);
+  if(minRooms>0) items = items.filter(o => o.rooms >= minRooms);
+  if(district.value) items = items.filter(o => o.district === district.value);
+  switch(sort.value){
+    case 'priceAsc': items.sort((a,b)=>a.price-b.price); break;
+    case 'priceDesc': items.sort((a,b)=>b.price-a.price); break;
+    case 'sqmAsc': items.sort((a,b)=>a.pricePerSqm-b.pricePerSqm); break;
+    case 'sqmDesc': items.sort((a,b)=>b.pricePerSqm-a.pricePerSqm); break;
+    default: items.sort((a,b)=> new Date(b.date)-new Date(a.date));
+  }
+  renderList(items); renderMarkers(items); renderKpis(items);
+  highlightDistrict(district.value, demoOffers);
+}
+document.getElementById('applyBtn').addEventListener('click', applyFilters);
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  q.value='München'; maxRent.value=''; rooms.value='2'; district.value=''; sort.value='recent';
+  applyFilters(); highlightDistrict('',[]);
+});
 
-    document.getElementById('applyBtn').addEventListener('click', applyFilters);
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      q.value = 'München'; maxRent.value=''; rooms.value='2'; district.value=''; sort.value='recent';
-      applyFilters();
-      highlightDistrict('', []); // Markierung entfernen
-    });
-
-    // --- Top‑Angebote: Platzhalter + Render ---
-const TOP_PLACEHOLDERS = Array.from({length:8}, (_,i)=>({id:`ph${i+1}`}));
-
+/* ------- Top-Angebote (Platzhalter + Render) ------- */
+const TOP_PLACEHOLDERS = []; // leer = „Keine Treffer“-Karte
 function renderTopOffers(items){
   const el = document.getElementById('topOffers');
   if(!el) return;
-  el.innerHTML = items.map(it => {
-    const isLive = !!it.title;
-    const price = isLive ? `${it.price ?? it.price_formatted ?? ''}` : '';
-    const rooms = isLive ? (it.rooms ?? it.bedroom_number ?? '') : '';
-    const href  = isLive ? (it.url ?? '#') : '#';
-    return `
-      <a class="topcard" role="listitem" ${isLive?`href="${href}" target="_blank" rel="noopener"`:''}>
-        <div class="topthumb ${isLive?'' :'skeleton'}">${isLive? 'Bild' : 'Wird geladen…'}</div>
-        <div class="topmeta">
-          <span>${isLive? (rooms? rooms+ ' Zi' : '') : '&nbsp;'}</span>
-          <span>${isLive? price : '&nbsp;'}</span>
-        </div>
-        <div class="toptitle">${isLive? (it.title ?? 'Wohnung') : 'Externer Eintrag'}</div>
-      </a>`;
-  }).join('');
+  const html = (items && items.length ? items : [{title:'Keine Treffer', url:'#'}]).map(it=>`
+    <a class="topcard" role="listitem" ${it.url?`href="${it.url}" target="_blank" rel="noopener"`:''}>
+      <div class="topthumb">${it.title ? 'Bild' : 'Wird geladen…'}</div>
+      <div class="topmeta">
+        <span>${it.rooms? it.rooms+' Zi' : '&nbsp;'}</span>
+        <span>${it.price||'&nbsp;'}</span>
+      </div>
+      <div class="toptitle">${it.title||'Externer Eintrag'}</div>
+    </a>
+  `).join('');
+  el.innerHTML = html;
 }
-
-// Erst Platzhalter anzeigen
 renderTopOffers(TOP_PLACEHOLDERS);
 
-// --- Status Helper ---
-const apiStatus   = document.getElementById('apiStatus');
-function setStatus(msg){ if(apiStatus) apiStatus.textContent = msg; }
+const apiStatus = document.getElementById('apiStatus');
+const setStatus = msg => { if(apiStatus) apiStatus.textContent = msg; };
 
-// --- Robuster JSONP‑Hook (Timeout + onerror + Logs) ---
-window.nestoriaSearch = function nestoriaSearch({place="muenchen", results=12}={}){
-  const cbName = `nestoriaCb_${Date.now()}`;
-  const url = `https://api.nestoria.de/api?encoding=json&pretty=1&action=search_listings&listing_type=rent&country=de&language=de&number_of_results=${results}&place_name=${encodeURIComponent(place)}&callback=${cbName}`;
-
-  setStatus(`Starte Anfrage an Nestoria (${place}, ${results}) …`);
-  console.log('[Nestoria] GET', url);
-
-  let finished = false; let script;
-  const cleanup = () => {
-    finished = true;
-    try { delete window[cbName]; } catch(e){}
-    if(script && script.parentNode) script.parentNode.removeChild(script);
-  };
-
-  // 6s Timeout → Mock-Daten
-  const to = setTimeout(()=>{
-    if(finished) return;
-    cleanup();
-    setStatus('Keine Antwort (Timeout). Zeige Mock-Daten.');
-    console.warn('[Nestoria] Timeout – zeige Mock-Daten');
-    renderTopOffers([
-      {title:'Beispiel: 2-Zi in Schwabing', price:'€ 1.450', rooms:2, url:'#'},
-      {title:'Beispiel: 3-Zi Ramersdorf',   price:'€ 1.780', rooms:3, url:'#'},
-      {title:'Beispiel: 1-Zi Maxvorstadt',  price:'€ 990',  rooms:1, url:'#'},
-      {title:'Beispiel: 4-Zi Sendling',     price:'€ 2.150', rooms:4, url:'#'},
-    ]);
-  }, 6000);
-
-  // JSONP Callback
-  window[cbName] = (data)=>{
-    if(finished) return;
-    clearTimeout(to);
-    try{
-      const listings = (data?.response?.listings||[]).map(x=>({
-        title: x.title,
-        url:   x.lister_url || x.url,
-        price: x.price_formatted,
-        rooms: x.bedroom_number
-      }));
-      setStatus(`Erhalten: ${listings.length} Einträge`);
-      console.log('[Nestoria] Response', data);
-      renderTopOffers(listings.length ? listings : [{title:'Keine Treffer', price:'', rooms:'', url:'#'}]);
-    } catch(err){
-      console.error('[Nestoria] Parse error', err);
-      setStatus('Antwort konnte nicht verarbeitet werden.');
-    } finally {
-      cleanup();
+/* ------- Robuster Nestoria-JSONP (place_name → centre_point → Mock) ------- */
+function buildNestoriaUrl({place, results, cbName, centre, radiusKm}){
+  const base = "https://api.nestoria.de/api";
+  const p = new URLSearchParams({
+    encoding:"json", pretty:"1", action:"search_listings",
+    listing_type:"rent", country:"de", language:"de",
+    number_of_results:String(results), callback:cbName
+  });
+  if(centre){ p.set("centre_point", `${centre.lat},${centre.lng}`); p.set("radius", String(radiusKm||5)); }
+  else { p.set("place_name", place); }
+  return `${base}?${p.toString()}`;
+}
+function nestoriaSearch({place="muenchen", results=12, centre={lat:48.137154,lng:11.576124}, radiusKm=7}={}){
+  setStatus(`Frage Nestoria an… (${place}, ${results})`);
+  function jsonp({useCentre=false}={}){
+    return new Promise((resolve,reject)=>{
+      const cb = `nestoriaCb_${Date.now()}_${Math.floor(Math.random()*1e6)}`;
+      const url = buildNestoriaUrl({place,results,cbName:cb,centre:useCentre?centre:null,radiusKm});
+      let script; const cleanup=()=>{ try{delete window[cb];}catch{} if(script&&script.parentNode)script.parentNode.removeChild(script); };
+      const timer = setTimeout(()=>{ cleanup(); reject(new Error("timeout")); }, 8000);
+      window[cb]=(data)=>{ clearTimeout(timer); cleanup();
+        const listings = (data?.response?.listings||[]).map(x=>({title:x.title,url:x.lister_url||x.url,price:x.price_formatted,rooms:x.bedroom_number}));
+        resolve(listings);
+      };
+      script=document.createElement('script'); script.src=url; script.async=true;
+      script.onerror=()=>{ clearTimeout(timer); cleanup(); reject(new Error("script-error")); };
+      document.body.appendChild(script);
+    });
+  }
+  jsonp({useCentre:false}).then(L=>{
+    if(L.length){ renderTopOffers(L); setStatus(`Erhalten: ${L.length} Einträge (place_name)`); }
+    else{
+      setStatus("0 Einträge für place_name – versuche Radius-Suche…");
+      return jsonp({useCentre:true}).then(L2=>{
+        if(L2.length){ renderTopOffers(L2); setStatus(`Erhalten: ${L2.length} Einträge (centre_point)`); }
+        else{ renderTopOffers([]); setStatus("Nestoria lieferte 0 Einträge."); }
+      });
     }
-  };
+  }).catch(()=>{
+    renderTopOffers([]); setStatus("Fehler/Timeout bei Nestoria.");
+  });
+}
 
-  // Script laden
-  script = document.createElement('script');
-  script.src = url;
-  script.async = true;
-  script.onerror = () => {
-    if(finished) return;
-    clearTimeout(to);
-    cleanup();
-    setStatus('Laden der API fehlgeschlagen (onerror). Eventuell Ad-Blocker?');
-    console.error('[Nestoria] Script onerror');
-  };
-  document.body.appendChild(script);
-};
-
-// --- API‑Sandbox: Buttons verdrahten ---
+/* ------- Dev-Sandbox Buttons ------- */
 const btnNestoriaTest  = document.getElementById('btnNestoriaTest');
 const btnNestoriaReset = document.getElementById('btnNestoriaReset');
 const apiPlace         = document.getElementById('apiPlace');
 const apiResults       = document.getElementById('apiResults');
-
 if(btnNestoriaTest){
   btnNestoriaTest.addEventListener('click', ()=>{
-    setStatus('Frage Nestoria per JSONP an …');
-    window.nestoriaSearch({
-      place: (apiPlace?.value||'muenchen'),
-      results: parseInt(apiResults?.value||'12',10)
+    nestoriaSearch({
+      place: (apiPlace?.value||'muenchen').trim(),
+      results: parseInt(apiResults?.value||'12',10),
+      centre: {lat:48.137154, lng:11.576124}, radiusKm:7
     });
   });
 }
 if(btnNestoriaReset){
-  btnNestoriaReset.addEventListener('click', ()=>{
-    renderTopOffers(TOP_PLACEHOLDERS);
-    setStatus('Platzhalter wiederhergestellt.');
-  });
+  btnNestoriaReset.addEventListener('click', ()=>{ renderTopOffers(TOP_PLACEHOLDERS); setStatus("Platzhalter wiederhergestellt."); });
 }
 
-// Initial render
+/* ------- Initial ------- */
 applyFilters();
+</script>
 
-    // --- API-Hook (später) ---
-    // fetch('/api/offers?city=muenchen').then(r=>r.json()).then(data=>{ /* map auf schema, dann applyFilters() */ })
-  </script>
 </body>
 </html>
