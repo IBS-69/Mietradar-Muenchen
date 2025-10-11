@@ -150,7 +150,7 @@
 
     <section id="methodik" class="card" style="margin-top:16px">
       <h2>Methodik & Transparenz</h2>
-      <p style="color:var(--muted)">Diese Demo nutzt synthetische Daten. In Produktion werden nur Quellen verwendet, deren AGB eine automatisierte Abfrage erlauben oder die offizielle APIs bereitstellen. Geodaten: OpenStreetMap-Mitwirkende. Keine Speicherung von PII.</p>
+      <p style="color:var(--muted)">Diese Demo nutzt synthetische Daten. In Produktion werden nur Quellen verwendet, deren AGB eine automatisierte Abfrage erlauben oder die offizielle APIs bereitstellen. Karte via OSM/Leaflet. Bezirksgrenzen/GeoJSON aktuell deaktiviert. Keine Speicherung von PII.</p>
     </section>
   </main>
 
@@ -167,7 +167,7 @@
     // --- Demo-Daten (ersetzbar durch API) ---
     const demoOffers = [
       {id:1, title:"2-Zi Altbau nahe Hohenzollernplatz", price:1350, size:48, rooms:2, district:"Schwabing-West", lat:48.1655, lng:11.5722, date:"2025-10-08"},
-      {id:2, title:"3-Zi Neubau, Balkon, U2 Josephsburg", price:1750, size:72, rooms:3, district:"Haidhausen", lat:48.1258, lng:11.6077, date:"2025-10-09"},
+      {id:2, title:"3-Zi Neubau, Balkon, U2 Josephsburg", price:1750, size:72, rooms:3, district:"Au-Haidhausen", lat:48.1258, lng:11.6077, date:"2025-10-09"},
       {id:3, title:"1,5-Zi Studio Maxvorstadt", price:990, size:30, rooms:1.5, district:"Maxvorstadt", lat:48.1497, lng:11.5670, date:"2025-10-07"},
       {id:4, title:"Familienfreundlich am Rotkreuzplatz", price:1950, size:83, rooms:3, district:"Neuhausen-Nymphenburg", lat:48.1560, lng:11.5325, date:"2025-10-09"},
       {id:5, title:"1-Zi Nähe Gärtnerplatz", price:1200, size:28, rooms:1, district:"Altstadt-Lehel", lat:48.1340, lng:11.5796, date:"2025-10-06"},
@@ -185,30 +185,26 @@
     let markersLayer = L.layerGroup().addTo(map);
     let highlightLayer = L.layerGroup().addTo(map);
 
-    // --- Echte Bezirksgrenzen (GeoJSON) ---
-    // Erwartet eine Datei ./muc_bezirke.geojson (MultiPolygon der 25 Stadtbezirke)
-    // Quelle: Open Data / OSM-Exports. Eigenschaften sollten einen Bezirksnamen enthalten.
-    let districtIndex = new Map(); // key: normalisierter Bezirksname -> GeoJSON Feature
+    // --- Bezirks-Geometrien laden (lokale Datei → WFS → Mini‑Fallback) ---
+    // 1) Versuche zuerst eine lokale Datei ./muc_bezirke.geojson (im Repo ablegen!)
+    // 2) Falls nicht vorhanden, WFS der Stadt München (GeoJSON, WGS84)
+    const LOCAL_GEOJSON = './muc_bezirke.geojson';
+    const WFS_URL = 'https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:vablock_stadtbezirke_opendata&outputFormat=application/json&srsName=EPSG:4326';
 
-    // Mini‑Fallback: eingebettete, stark vereinfachte Polygone für die Vorschau
+    let districtIndex = new Map(); // key: normalisierter Name -> Feature
+
+    // Mini‑Fallback: stark vereinfachte Demo‑Geometrien (nur ein paar Bezirke)
     const MUC_BEZIRKE_MINI = {
       "type":"FeatureCollection",
       "features":[
         {"type":"Feature","properties":{"name":"Altstadt-Lehel"},
-          "geometry":{"type":"Polygon","coordinates":[[
-            [11.5655,48.1474],[11.5855,48.1474],[11.5855,48.1274],[11.5655,48.1274],[11.5655,48.1474]
-          ]]}
-        },
-        {"type":"Feature","properties":{"name":"Sendling-Westpark"},
-          "geometry":{"type":"Polygon","coordinates":[[
-            [11.5000,48.1350],[11.5400,48.1350],[11.5400,48.1050],[11.5000,48.1050],[11.5000,48.1350]
-          ]]}
-        },
-        {"type":"Feature","properties":{"name":"Schwabing-West"},
-          "geometry":{"type":"Polygon","coordinates":[[
-            [11.5550,48.1780],[11.5850,48.1780],[11.5850,48.1550],[11.5550,48.1550],[11.5550,48.1780]
-          ]]}
-        }
+          "geometry":{"type":"Polygon","coordinates":[[[11.5655,48.1474],[11.5855,48.1474],[11.5855,48.1274],[11.5655,48.1274],[11.5655,48.1474]]]}}
+        ,{"type":"Feature","properties":{"name":"Sendling-Westpark"},
+          "geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1350],[11.5400,48.1350],[11.5400,48.1050],[11.5000,48.1050],[11.5000,48.1350]]]}}
+        ,{"type":"Feature","properties":{"name":"Schwabing-West"},
+          "geometry":{"type":"Polygon","coordinates":[[[11.5550,48.1780],[11.5850,48.1780],[11.5850,48.1550],[11.5550,48.1550],[11.5550,48.1780]]]}}
+        ,{"type":"Feature","properties":{"name":"Laim"},
+          "geometry":{"type":"Polygon","coordinates":[[[11.5000,48.1450],[11.5350,48.1450],[11.5350,48.1250],[11.5000,48.1250],[11.5000,48.1450]]]}}
       ]
     };
 
@@ -220,22 +216,25 @@
         .replace(/[^a-z]+/g,'');
     }
 
-    fetch('./muc_bezirke.geojson')
-      .then(r => r.ok ? r.json() : Promise.reject('not found'))
-      .then(geo => initDistrictIndex(geo))
-      .catch(() => { console.warn('[GeoJSON] ./muc_bezirke.geojson nicht gefunden – nutze eingebettete Vorschaugeometrien'); initDistrictIndex(MUC_BEZIRKE_MINI); });
-
     function initDistrictIndex(geo){
       const feats = Array.isArray(geo.features) ? geo.features : [];
       districtIndex.clear();
       feats.forEach(f => {
-        const props = f.properties||{};
-        const candidates = [props.name, props.NAME, props.bezirk, props.BEZIRK, props.GEN, props.gen, props.stadtbezirk];
-        const key = candidates.find(Boolean);
+        const p = f.properties||{};
+        const key = [p.name,p.NAME,p.bezirk,p.BEZIRK,p.GEN,p.gen,p.stadtbezirk].find(Boolean);
         if(key){ districtIndex.set(normName(key), f); }
       });
       console.log('[GeoJSON] Bezirke geladen:', districtIndex.size);
     }
+
+    // Laden mit Fallback: lokal → WFS → Mini
+    fetch(LOCAL_GEOJSON).then(r => r.ok? r.json() : Promise.reject('local-missing'))
+      .then(geo => initDistrictIndex(geo))
+      .catch(() => fetch(WFS_URL, {mode:'cors'})
+        .then(r => r.ok? r.json() : Promise.reject('wfs-failed'))
+        .then(geo => initDistrictIndex(geo))
+        .catch(err => { console.warn('[GeoJSON] Fallback Mini, Grund:', err); initDistrictIndex(MUC_BEZIRKE_MINI); })
+      );
 
     function renderMarkers(items){
       markersLayer.clearLayers();
@@ -311,34 +310,20 @@
       highlightLayer.clearLayers();
       if(!name) return;
 
-      // 1) Versuch: echtes GeoJSON-Polygon zum Bezirk anzeigen
-      const f = districtIndex.get(normName(name));
-      if(f){
-        const poly = L.geoJSON(f, {style:{color:'#ff6b6b', weight:2, fillOpacity:0}}).addTo(highlightLayer);
-        const b = poly.getBounds();
-        if(b.isValid()) map.fitBounds(b.pad(0.15));
+      // A) Bevorzugt: echtes GeoJSON‑Feature als rote Outline
+      const feat = districtIndex.get(normName(name));
+      if(feat){
+        const layer = L.geoJSON(feat, {style:{color:'#ff6b6b', weight:2, fillOpacity:0}}).addTo(highlightLayer);
+        const b = layer.getBounds();
+        if(b && b.isValid()) { map.fitBounds(b.pad(0.12)); }
         return;
       }
 
-      // 2) Fallback: auf Punkte zoomen und Rechteck zeichnen (wenn Demo-Daten vorhanden)
-      const pts = items.filter(o => o.district === name).map(o => [o.lat, o.lng]);
-      if(pts.length){
-        if(pts.length === 1){
-          const c = pts[0];
-          L.circle(c, {radius: 900, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
-          map.setView(c, 13); // Bezirksebene statt Straßenlevel
-        } else {
-          const bounds = L.latLngBounds(pts);
-          L.rectangle(bounds, {color:'#ff6b6b', weight:2, fill:false, dashArray:'6 4'}).addTo(highlightLayer);
-          map.fitBounds(bounds.pad(0.2));
-        }
-        return;
-      }
-
-      // 3) Letzter Fallback: Kreis um ungefähren Mittelpunkt
+      // B) Fallbacks
+      // 1) Mittelpunkt/Heuristik pro Bezirk
       const centers = {
         'altstadtlehel':[48.1374,11.5755], 'ludwigsvorstadtisarvorstadt':[48.1302,11.5589], 'maxvorstadt':[48.1497,11.5670],
-        'schwabingwest':[48.1655,11.5700], 'auhaidhausen':[48.1295,11.5975], 'sendling':[48.1115,11.5412],
+        'schwabingwest':[48.1655,11.5700], 'auhaidhausen':[48.1336,11.5937], 'sendling':[48.1115,11.5412],
         'sendlingwestpark':[48.1200,11.5200], 'schwanthalerhoehe':[48.1390,11.5380], 'neuhausennymphenburg':[48.1550,11.5250],
         'moosach':[48.1860,11.5080], 'milbertshofenamhart':[48.1960,11.5820], 'schwabingfreimann':[48.1860,11.6110],
         'bogenhausen':[48.1490,11.6210], 'bergamlaim':[48.1280,11.6300], 'truderingriem':[48.1280,11.6900],
@@ -347,14 +332,29 @@
         'pasingobermenzing':[48.1500,11.4600], 'aubinglochhausenlangwied':[48.1600,11.4100], 'allachuntermenzing':[48.1900,11.4800],
         'feldmochinghasenbergl':[48.2100,11.5500], 'laim':[48.1400,11.5100]
       };
-      const c = centers[normName(name)];
+      const key = normName(name);
+      const c = centers[key];
       if(c){
         const circle = L.circle(c, {radius: 800, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
         map.fitBounds(circle.getBounds().pad(0.2));
+        return;
+      }
+
+      // 2) Notfalls: auf vorhandene Trefferpunkte zoomen
+      const pts = items.filter(o => o.district === name).map(o => [o.lat, o.lng]);
+      if(pts.length){
+        if(pts.length === 1){
+          const p = pts[0];
+          L.circle(p, {radius: 900, color:'#ff6b6b', weight:2, fill:false}).addTo(highlightLayer);
+          map.setView(p, 13);
+        } else {
+          const bounds = L.latLngBounds(pts);
+          L.rectangle(bounds, {color:'#ff6b6b', weight:2, fill:false, dashArray:'6 4'}).addTo(highlightLayer);
+          map.fitBounds(bounds.pad(0.2));
+        }
       }
     }
-
-    function applyFilters(){
+function applyFilters(){
       let items = [...demoOffers];
       const qv = (q.value||'').toLowerCase();
       if(qv){ items = items.filter(o => o.title.toLowerCase().includes(qv) || o.district.toLowerCase().includes(qv) ); }
