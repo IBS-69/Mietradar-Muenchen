@@ -1,384 +1,47 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MietRadar München – MVP Starter</title>
+  <title>MietRadar München</title>
+
+  <!-- Leaflet -->
   <link rel="preconnect" href="https://unpkg.com">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <style>
-    :root {
-      --bg: #0b0d12;
-      --panel: #141822;
-      --muted: #8b94a7;
-      --text: #e6eaf2;
-      --accent: #5de4c7;
-      --accent2: #7aa2f7;
-      --danger: #ff6b6b;
-    }
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="anonymous" />
 
-    * {
-      box-sizing: border-box
-    }
-
-    html,
-    body {
-      height: 100%
-    }
-
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu;
-      color: var(--text);
-      background: linear-gradient(180deg, #0b0d12 0%, #0e111a 100%);
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      backdrop-filter: saturate(140%) blur(8px);
-      background: rgba(11, 13, 18, .7);
-      border-bottom: 1px solid #1f2533
-    }
-
-    .wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      letter-spacing: .2px
-    }
-
-    .brand .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent)
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px
-    }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid #1f2533;
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, .25)
-    }
-
-    h1 {
-      font-size: 22px;
-      margin: 0
-    }
-
-    h2 {
-      font-size: 16px;
-      margin: 0 0 10px 0;
-      color: #c9d3ea
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 10px 0 6px
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #273043;
-      background: #0f1320;
-      color: var(--text)
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      color: #0a0f1a;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer
-    }
-
-    .btn.secondary {
-      background: #0f1320;
-      color: var(--text);
-      border: 1px solid #273043
-    }
-
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px
-    }
-
-    @media (max-width:900px) {
-      .kpis {
-        grid-template-columns: 1fr 1fr
-      }
-    }
-
-    .kpi {
-      padding: 12px;
-      border-radius: 12px;
-      background: #0f1320;
-      border: 1px dashed #273043
-    }
-
-    .kpi .val {
-      font-weight: 800;
-      font-size: 20px
-    }
-
-    .kpi .lbl {
-      font-size: 12px;
-      color: var(--muted)
-    }
-
-    #map {
-      height: 420px;
-      border-radius: 14px;
-      overflow: hidden
-    }
-
-    .list {
-      display: grid;
-      gap: 10px;
-      margin-top: 10px
-    }
-
-    .item {
-      display: grid;
-      grid-template-columns: 110px 1fr;
-      gap: 12px;
-      background: #0f1320;
-      border: 1px solid #273043;
-      border-radius: 12px;
-      padding: 10px
-    }
-
-    .thumb {
-      background: #111524;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #65708a
-    }
-
-    .meta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      color: #aab3c7
-    }
-
-    footer {
-      padding: 30px 16px;
-      color: #8b94a7;
-      font-size: 12px;
-      text-align: center
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #111524;
-      border: 1px solid #273043;
-      font-size: 11px
-    }
-
-    /* Entfernt Browser-Spinner und verhindert versehentliche Minuswerte-UX */
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-
-    /* Top-Angebote (oben, einheitliche Kacheln) */
-    .topbar {
-      margin-top: 14px;
-    }
-
-    .tophead {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px
-    }
-
-    .tophead h2 {
-      font-size: 16px;
-      margin: 0;
-      color: #c9d3ea
-    }
-
-    .topscroller {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scroll-snap-type: x mandatory
-    }
-
-    .topcard {
-      flex: 0 0 240px;
-      background: var(--panel);
-      border: 1px solid #1f2533;
-      border-radius: 14px;
-      padding: 10px;
-      scroll-snap-align: start
-    }
-
-    .topthumb {
-      width: 100%;
-      height: 140px;
-      border-radius: 10px;
-      background: #0f1320;
-      border: 1px dashed #273043;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #65708a
-    }
-
-    .topmeta {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #aab3c7
-    }
-
-    .toptitle {
-      margin: 6px 0 0;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.2;
-      min-height: 34px
-    }
-
-    .skeleton {
-      position: relative;
-      overflow: hidden
-    }
-
-    .skeleton::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .06), rgba(255, 255, 255, 0));
-      transform: translateX(-100%);
-      animation: shimmer 1.4s infinite
-    }
-
-    @keyframes shimmer {
-      100% {
-        transform: translateX(100%)
-      }
-    }
-  </style>
+  <!-- App CSS -->
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
 <body>
   <header>
-    <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:16px">
+    <div class="wrap header-row">
       <div class="brand"><span class="dot"></span><span>MietRadar München</span></div>
-      <nav style="display:flex; gap:12px; align-items:center">
-        <span class="badge">MVP</span>
-        <a href="#methodik" style="color:var(--muted); text-decoration:none">Methodik</a>
+      <nav class="main-nav">
+        <a href="#methodik">Methodik</a>
       </nav>
     </div>
   </header>
 
-  <main class="wrap" style="margin-top:18px">
-    <!-- TOP-ANGEBOTE / Platzhalter (später über API befüllen) -->
+  <main class="wrap main-wrap">
+    <!-- TOP-ANGEBOTE -->
     <section class="card topbar" aria-label="Top-Angebote">
       <div class="tophead">
-        <h2>Top‑Angebote</h2>
-        <span class="badge">extern • später per API</span>
+        <h2>Top-Angebote</h2>
       </div>
       <div class="topscroller" id="topOffers" role="list" aria-label="Top-Angebote Scroller"></div>
     </section>
 
-    <!-- API‑Sandbox (nur für Entwicklung) -->
-    <section class="card" aria-label="API-Sandbox" style="margin:12px 0 12px">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px">
-        <h2 style="margin:0">API‑Sandbox (Dev)</h2>
-        <span class="badge">Nur lokal / Test</span>
-      </div>
-      <p style="color:var(--muted); margin:6px 0 12px">Hier kannst du die <code>nestoriaSearch()</code>‑Abfrage testen,
-        ohne das restliche Layout zu ändern. Ergebnisse landen oben in der Leiste „Top‑Angebote“.</p>
-      <div class="row">
-        <div>
-          <label for="apiPlace">Ort / place_name</label>
-          <input id="apiPlace" value="muenchen" placeholder="z. B. muenchen, schwabing" />
-        </div>
-        <div>
-          <label for="apiResults">Anzahl Ergebnisse</label>
-          <select id="apiResults">
-            <option>8</option>
-            <option selected>12</option>
-            <option>16</option>
-            <option>24</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex; gap:10px; margin-top:12px">
-        <button class="btn" id="btnNestoriaTest">Nestoria testen</button>
-        <button class="btn secondary" id="btnNestoriaReset">Platzhalter anzeigen</button>
-      </div>
-      <div id="apiStatus" style="margin-top:8px; font-size:12px; color:var(--muted)"></div>
-    </section>
-
     <div class="grid">
-      <!-- Sidebar: Filter -->
-      <section class="card">
+      <!-- Sidebar -->
+      <section class="card" aria-label="Suche und Filter">
         <h2>Suche & Filter</h2>
+
         <label for="q">Stadt/Bezirk</label>
         <input id="q" placeholder="z. B. Schwabing-West" value="München" />
+
         <div class="row">
           <div>
             <label for="maxRent">Max. Kaltmiete (€)</label>
@@ -395,6 +58,7 @@
             </select>
           </div>
         </div>
+
         <div class="row">
           <div>
             <label for="district">Stadtteil</label>
@@ -438,41 +102,32 @@
             </select>
           </div>
         </div>
-        <div style="display:flex; gap:10px; margin-top:12px">
+
+        <div class="btn-row">
           <button class="btn" id="applyBtn">Filtern</button>
           <button class="btn secondary" id="resetBtn">Zurücksetzen</button>
         </div>
-        <div style="margin-top:12px; font-size:12px; color:var(--muted)">
-          Daten sind Demo‑Einträge. Später via <code>/api/offers</code> ersetzbar.
-        </div>
       </section>
 
-      <!-- Main: KPIs, Map, List -->
-      <section class="card">
+      <!-- Main -->
+      <section class="card" aria-label="Ergebnisse">
         <div class="kpis">
-          <div class="kpi">
-            <div class="lbl">Angebote</div>
-            <div class="val" id="kpiCount">–</div>
-          </div>
-          <div class="kpi">
-            <div class="lbl">Median €/m²</div>
-            <div class="val" id="kpiMedian">–</div>
-          </div>
-          <div class="kpi">
-            <div class="lbl">Ø Zimmer</div>
-            <div class="val" id="kpiRooms">–</div>
-          </div>
+          <div class="kpi"><div class="lbl">Angebote</div><div class="val" id="kpiCount">–</div></div>
+          <div class="kpi"><div class="lbl">Median €/m²</div><div class="val" id="kpiMedian">–</div></div>
+          <div class="kpi"><div class="lbl">Ø Zimmer</div><div class="val" id="kpiRooms">–</div></div>
         </div>
-        <div style="margin-top:12px" id="map" aria-label="Karte München"></div>
+        <div id="map" class="map" aria-label="Karte München"></div>
         <div class="list" id="results"></div>
       </section>
     </div>
 
-    <section id="methodik" class="card" style="margin-top:16px">
+    <section id="methodik" class="card methodik" aria-label="Methodik">
       <h2>Methodik & Transparenz</h2>
-      <p style="color:var(--muted)">Diese Demo nutzt synthetische Daten. In Produktion werden nur Quellen verwendet,
-        deren AGB eine automatisierte Abfrage erlauben oder die offizielle APIs bereitstellen. Karte via OSM/Leaflet.
-        Bezirksgrenzen/GeoJSON aktuell deaktiviert. Keine Speicherung von PII.</p>
+      <p class="muted">
+        Diese Demo nutzt synthetische Daten. In Produktion werden nur Quellen verwendet,
+        deren AGB eine automatisierte Abfrage erlauben oder die offizielle APIs bereitstellen.
+        Karte via OSM/Leaflet. Keine Speicherung von PII.
+      </p>
     </section>
   </main>
 
@@ -480,262 +135,11 @@
     © 2025 MietRadar München · Karten © OpenStreetMap-Mitwirkende · Tiles via OSM/Leaflet
   </footer>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script>
-
-    /* ------- Basis-Daten (Demo bis echte API kommt) ------- */
-    const demoOffers = [
-      { id: 1, title: "2-Zi Altbau nahe Hohenzollernplatz", price: 1350, size: 48, rooms: 2, district: "Schwabing-West", lat: 48.1655, lng: 11.5722, date: "2025-10-08" },
-      { id: 2, title: "3-Zi Neubau, Balkon, U2 Josephsburg", price: 1750, size: 72, rooms: 3, district: "Au-Haidhausen", lat: 48.1258, lng: 11.6077, date: "2025-10-09" },
-      { id: 3, title: "1,5-Zi Studio Maxvorstadt", price: 990, size: 30, rooms: 1.5, district: "Maxvorstadt", lat: 48.1497, lng: 11.5670, date: "2025-10-07" },
-      { id: 4, title: "Familienfreundlich am Rotkreuzplatz", price: 1950, size: 83, rooms: 3, district: "Neuhausen-Nymphenburg", lat: 48.1560, lng: 11.5325, date: "2025-10-09" },
-      { id: 5, title: "1-Zi Nähe Gärtnerplatz", price: 1200, size: 28, rooms: 1, district: "Altstadt-Lehel", lat: 48.1340, lng: 11.5796, date: "2025-10-06" },
-      { id: 6, title: "4-Zi Dachgeschoss Sendling", price: 2200, size: 96, rooms: 4, district: "Sendling", lat: 48.1115, lng: 11.5412, date: "2025-10-08" }
-    ].map(o => ({ ...o, pricePerSqm: +(o.price / o.size).toFixed(2) }));
-
-    /* ------- Leaflet Karte ------- */
-    const map = L.map('map').setView([48.137154, 11.576124], 12);
-    map.attributionControl.setPrefix(false);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-    }).addTo(map);
-    let markersLayer = L.layerGroup().addTo(map);
-    let highlightLayer = L.layerGroup().addTo(map);
-
-    /* ------- Bezirks-Geometrien laden (lokal → WFS → Mini) ------- */
-    const LOCAL_GEOJSON = './muc_bezirke.geojson';
-    const WFS_URL = 'https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:vablock_stadtbezirke_opendata&outputFormat=application/json&srsName=EPSG:4326';
-    let districtIndex = new Map();
-    const MUC_BEZIRKE_MINI = {
-      "type": "FeatureCollection", "features": [
-        { "type": "Feature", "properties": { "name": "Altstadt-Lehel" }, "geometry": { "type": "Polygon", "coordinates": [[[11.5655, 48.1474], [11.5855, 48.1474], [11.5855, 48.1274], [11.5655, 48.1274], [11.5655, 48.1474]]] } },
-        { "type": "Feature", "properties": { "name": "Sendling-Westpark" }, "geometry": { "type": "Polygon", "coordinates": [[[11.5000, 48.1350], [11.5400, 48.1350], [11.5400, 48.1050], [11.5000, 48.1050], [11.5000, 48.1350]]] } },
-        { "type": "Feature", "properties": { "name": "Schwabing-West" }, "geometry": { "type": "Polygon", "coordinates": [[[11.5550, 48.1780], [11.5850, 48.1780], [11.5850, 48.1550], [11.5550, 48.1550], [11.5550, 48.1780]]] } },
-        { "type": "Feature", "properties": { "name": "Laim" }, "geometry": { "type": "Polygon", "coordinates": [[[11.5000, 48.1450], [11.5350, 48.1450], [11.5350, 48.1250], [11.5000, 48.1250], [11.5000, 48.1450]]] } }
-      ]
-    };
-    const normName = s => (s || '').toLowerCase()
-      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-      .normalize('NFKD').replace(/[^a-z]+/g, '');
-    function initDistrictIndex(geo) {
-      const feats = Array.isArray(geo.features) ? geo.features : [];
-      districtIndex.clear();
-      feats.forEach(f => {
-        const p = f.properties || {};
-        const key = [p.name, p.NAME, p.bezirk, p.BEZIRK, p.GEN, p.gen, p.stadtbezirk].find(Boolean);
-        if (key) districtIndex.set(normName(key), f);
-      });
-    }
-    fetch(LOCAL_GEOJSON).then(r => r.ok ? r.json() : Promise.reject())
-      .then(initDistrictIndex)
-      .catch(() => fetch(WFS_URL).then(r => r.ok ? r.json() : Promise.reject())
-        .then(initDistrictIndex)
-        .catch(() => initDistrictIndex(MUC_BEZIRKE_MINI))
-      );
-
-    /* ------- Render Helpers (Liste / KPIs / Marker) ------- */
-    const resultsEl = document.getElementById('results');
-    const kpiCount = document.getElementById('kpiCount');
-    const kpiMedian = document.getElementById('kpiMedian');
-    const kpiRooms = document.getElementById('kpiRooms');
-
-    const median = arr => { if (!arr.length) return 0; const s = [...arr].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-
-    function renderList(items) {
-      resultsEl.innerHTML = items.map(o => `
-    <article class="item" aria-label="Angebot">
-      <div class="thumb">${o.district}</div>
-      <div>
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
-          <h3 style="margin:0; font-size:16px">${o.title}</h3>
-          <div class="badge">${new Date(o.date).toLocaleDateString('de-DE')}</div>
-        </div>
-        <div class="meta">
-          <span>${o.rooms} Zi</span>
-          <span>${o.size} m²</span>
-          <span><b>${o.price} €</b> (${o.pricePerSqm} €/m²)</span>
-          <span>${o.district}</span>
-        </div>
-      </div>
-    </article>
-  `).join('');
-    }
-    function renderKpis(items) {
-      kpiCount.textContent = items.length;
-      const med = median(items.map(o => o.pricePerSqm));
-      kpiMedian.textContent = med ? med.toFixed(0) : '–';
-      const avgRooms = items.length ? (items.reduce((s, o) => s + o.rooms, 0) / items.length) : 0;
-      kpiRooms.textContent = avgRooms ? avgRooms.toFixed(1) : '–';
-    }
-    function renderMarkers(items) {
-      markersLayer.clearLayers();
-      items.forEach(o => {
-        const m = L.marker([o.lat, o.lng]).bindPopup(
-          `<b>${o.title}</b><br/>${o.rooms} Zi · ${o.size} m²<br/><b>${o.price} €</b> (${o.pricePerSqm} €/m²)<br/><small>${o.district}</small>`
-        );
-        markersLayer.addLayer(m);
-      });
-    }
-
-    /* ------- Filtering ------- */
-    const q = document.getElementById('q');
-    const maxRent = document.getElementById('maxRent');
-    const rooms = document.getElementById('rooms');
-    const district = document.getElementById('district');
-    const sort = document.getElementById('sort');
-
-    maxRent.addEventListener('keydown', e => { if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault(); });
-    maxRent.addEventListener('input', () => { const v = parseFloat(maxRent.value); if (Number.isNaN(v)) return; if (v < 0) maxRent.value = 0; });
-    maxRent.addEventListener('blur', () => { if (maxRent.value === '') return; const v = Math.max(0, Math.floor(parseFloat(maxRent.value) || 0)); maxRent.value = v; });
-
-    function highlightDistrict(name, items) {
-      highlightLayer.clearLayers();
-      if (!name) return;
-      const feat = districtIndex.get(normName(name));
-      if (feat) {
-        const layer = L.geoJSON(feat, { style: { color: '#ff6b6b', weight: 2, fillOpacity: 0 } }).addTo(highlightLayer);
-        const b = layer.getBounds(); if (b && b.isValid()) map.fitBounds(b.pad(0.12));
-        return;
-      }
-      const centers = {
-        'altstadtlehel': [48.1374, 11.5755], 'ludwigsvorstadtisarvorstadt': [48.1302, 11.5589], 'maxvorstadt': [48.1497, 11.5670],
-        'schwabingwest': [48.1655, 11.5700], 'auhaidhausen': [48.1336, 11.5937], 'sendling': [48.1115, 11.5412],
-        'sendlingwestpark': [48.1200, 11.5200], 'schwanthalerhoehe': [48.1390, 11.5380], 'neuhausennymphenburg': [48.1550, 11.5250],
-        'moosach': [48.1860, 11.5080], 'milbertshofenamhart': [48.1960, 11.5820], 'schwabingfreimann': [48.1860, 11.6110],
-        'bogenhausen': [48.1490, 11.6210], 'bergamlaim': [48.1280, 11.6300], 'truderingriem': [48.1280, 11.6900],
-        'ramersdorfperlach': [48.1000, 11.6200], 'obergiesingfasangarten': [48.1060, 11.6000], 'untergiesingharlaching': [48.1010, 11.5660],
-        'thalkirchenobersendlingforstenriedfuerstenriedsolln': [48.0890, 11.5200], 'hadern': [48.1110, 11.4800],
-        'pasingobermenzing': [48.1500, 11.4600], 'aubinglochhausenlangwied': [48.1600, 11.4100], 'allachuntermenzing': [48.1900, 11.4800],
-        'feldmochinghasenbergl': [48.2100, 11.5500], 'laim': [48.1400, 11.5100]
-      };
-      const c = centers[normName(name)];
-      if (c) {
-        const circle = L.circle(c, { radius: 800, color: '#ff6b6b', weight: 2, fill: false }).addTo(highlightLayer);
-        map.fitBounds(circle.getBounds().pad(0.2));
-        return;
-      }
-      const pts = items.filter(o => o.district === name).map(o => [o.lat, o.lng]);
-      if (pts.length) {
-        if (pts.length === 1) { const p = pts[0]; L.circle(p, { radius: 900, color: '#ff6b6b', weight: 2, fill: false }).addTo(highlightLayer); map.setView(p, 13); }
-        else { const b = L.latLngBounds(pts); L.rectangle(b, { color: '#ff6b6b', weight: 2, fill: false, dashArray: '6 4' }).addTo(highlightLayer); map.fitBounds(b.pad(0.2)); }
-      }
-    }
-
-    function applyFilters() {
-      let items = [...demoOffers];
-      const qv = (q.value || '').toLowerCase();
-      if (qv) items = items.filter(o => o.title.toLowerCase().includes(qv) || o.district.toLowerCase().includes(qv));
-      const max = parseFloat(maxRent.value);
-      if (!isNaN(max)) items = items.filter(o => o.price <= max);
-      const minRooms = parseFloat(rooms.value);
-      if (minRooms > 0) items = items.filter(o => o.rooms >= minRooms);
-      if (district.value) items = items.filter(o => o.district === district.value);
-      switch (sort.value) {
-        case 'priceAsc': items.sort((a, b) => a.price - b.price); break;
-        case 'priceDesc': items.sort((a, b) => b.price - a.price); break;
-        case 'sqmAsc': items.sort((a, b) => a.pricePerSqm - b.pricePerSqm); break;
-        case 'sqmDesc': items.sort((a, b) => b.pricePerSqm - a.pricePerSqm); break;
-        default: items.sort((a, b) => new Date(b.date) - new Date(a.date));
-      }
-      renderList(items); renderMarkers(items); renderKpis(items);
-      highlightDistrict(district.value, demoOffers);
-    }
-    document.getElementById('applyBtn').addEventListener('click', applyFilters);
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      q.value = 'München'; maxRent.value = ''; rooms.value = '2'; district.value = ''; sort.value = 'recent';
-      applyFilters(); highlightDistrict('', []);
-    });
-
-    /* ------- Top-Angebote (Platzhalter + Render) ------- */
-    const TOP_PLACEHOLDERS = []; // leer = „Keine Treffer“-Karte
-    function renderTopOffers(items) {
-      const el = document.getElementById('topOffers');
-      if (!el) return;
-      const html = (items && items.length ? items : [{ title: 'Keine Treffer', url: '#' }]).map(it => `
-    <a class="topcard" role="listitem" ${it.url ? `href="${it.url}" target="_blank" rel="noopener"` : ''}>
-      <div class="topthumb">${it.title ? 'Bild' : 'Wird geladen…'}</div>
-      <div class="topmeta">
-        <span>${it.rooms ? it.rooms + ' Zi' : '&nbsp;'}</span>
-        <span>${it.price || '&nbsp;'}</span>
-      </div>
-      <div class="toptitle">${it.title || 'Externer Eintrag'}</div>
-    </a>
-  `).join('');
-      el.innerHTML = html;
-    }
-    renderTopOffers(TOP_PLACEHOLDERS);
-
-    const apiStatus = document.getElementById('apiStatus');
-    const setStatus = msg => { if (apiStatus) apiStatus.textContent = msg; };
-
-    /* ------- Robuster Nestoria-JSONP (place_name → centre_point → Mock) ------- */
-    function buildNestoriaUrl({ place, results, cbName, centre, radiusKm }) {
-      const base = "https://api.nestoria.de/api";
-      const p = new URLSearchParams({
-        encoding: "json", pretty: "1", action: "search_listings",
-        listing_type: "rent", country: "de", language: "de",
-        number_of_results: String(results), callback: cbName
-      });
-      if (centre) { p.set("centre_point", `${centre.lat},${centre.lng}`); p.set("radius", String(radiusKm || 5)); }
-      else { p.set("place_name", place); }
-      return `${base}?${p.toString()}`;
-    }
-    function nestoriaSearch({ place = "muenchen", results = 12, centre = { lat: 48.137154, lng: 11.576124 }, radiusKm = 7 } = {}) {
-      setStatus(`Frage Nestoria an… (${place}, ${results})`);
-      function jsonp({ useCentre = false } = {}) {
-        return new Promise((resolve, reject) => {
-          const cb = `nestoriaCb_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
-          const url = buildNestoriaUrl({ place, results, cbName: cb, centre: useCentre ? centre : null, radiusKm });
-          let script; const cleanup = () => { try { delete window[cb]; } catch { } if (script && script.parentNode) script.parentNode.removeChild(script); };
-          const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 8000);
-          window[cb] = (data) => {
-            clearTimeout(timer); cleanup();
-            const listings = (data?.response?.listings || []).map(x => ({ title: x.title, url: x.lister_url || x.url, price: x.price_formatted, rooms: x.bedroom_number }));
-            resolve(listings);
-          };
-          script = document.createElement('script'); script.src = url; script.async = true;
-          script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error("script-error")); };
-          document.body.appendChild(script);
-        });
-      }
-      jsonp({ useCentre: false }).then(L => {
-        if (L.length) { renderTopOffers(L); setStatus(`Erhalten: ${L.length} Einträge (place_name)`); }
-        else {
-          setStatus("0 Einträge für place_name – versuche Radius-Suche…");
-          return jsonp({ useCentre: true }).then(L2 => {
-            if (L2.length) { renderTopOffers(L2); setStatus(`Erhalten: ${L2.length} Einträge (centre_point)`); }
-            else { renderTopOffers([]); setStatus("Nestoria lieferte 0 Einträge."); }
-          });
-        }
-      }).catch(() => {
-        renderTopOffers([]); setStatus("Fehler/Timeout bei Nestoria.");
-      });
-    }
-
-    /* ------- Dev-Sandbox Buttons ------- */
-    const btnNestoriaTest = document.getElementById('btnNestoriaTest');
-    const btnNestoriaReset = document.getElementById('btnNestoriaReset');
-    const apiPlace = document.getElementById('apiPlace');
-    const apiResults = document.getElementById('apiResults');
-    if (btnNestoriaTest) {
-      btnNestoriaTest.addEventListener('click', () => {
-        nestoriaSearch({
-          place: (apiPlace?.value || 'muenchen').trim(),
-          results: parseInt(apiResults?.value || '12', 10),
-          centre: { lat: 48.137154, lng: 11.576124 }, radiusKm: 7
-        });
-      });
-    }
-    if (btnNestoriaReset) {
-      btnNestoriaReset.addEventListener('click', () => { renderTopOffers(TOP_PLACEHOLDERS); setStatus("Platzhalter wiederhergestellt."); });
-    }
-
-    /* ------- Initial ------- */
-    applyFilters();
-  </script>
-
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin="anonymous"></script>
+  <!-- App JS -->
+  <script defer src="./app.js"></script>
 </body>
-
 </html>
