@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MietRadar München</title>
 
-  <!-- Leaflet -->
+  <!-- Leaflet CSS -->
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -13,14 +13,25 @@
         crossorigin="anonymous" />
 
   <!-- App CSS -->
- <link rel="stylesheet" href="/style.css?v=2" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
-<body>
+<body class="with-sb">
+  <!-- FIXED LEFT SIDEBAR -->
+  <aside class="sidebar" aria-label="Navigation">
+    <nav class="sb-section" aria-label="Navigation-Placeholder">
+      <a class="sb-link" href="#" title="Zur Startseite" id="linkHome">Startseite</a>
+      <a class="sb-link" href="#topic1">Placeholder 1</a>
+    </nav>
+  </aside>
+
   <header>
     <div class="wrap header-row">
+      <button class="sb-toggle" id="sbToggle" aria-label="Sidebar öffnen/schließen">☰</button>
       <div class="brand"><span class="dot"></span><span>MietRadar München</span></div>
       <nav class="main-nav">
-        <a href="#methodik">Methodik</a>
+        <button id="btnRegister" class="authbtn" aria-label="Registrieren">Registrieren</button>
+        <button id="btnLogin" class="authbtn" aria-label="Anmelden">Anmelden</button>
+        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Dark Mode</button>
       </nav>
     </div>
   </header>
@@ -28,17 +39,14 @@
   <main class="wrap main-wrap">
     <!-- TOP-ANGEBOTE -->
     <section class="card topbar" aria-label="Top-Angebote">
-      <div class="tophead">
-        <h2>Top-Angebote</h2>
-      </div>
+      <div class="tophead"><h2>Top-Angebote</h2></div>
       <div class="topscroller" id="topOffers" role="list" aria-label="Top-Angebote Scroller"></div>
     </section>
 
     <div class="grid">
-      <!-- Sidebar -->
+      <!-- Filter -->
       <section class="card" aria-label="Suche und Filter">
         <h2>Suche & Filter</h2>
-
         <label for="q">Stadt/Bezirk</label>
         <input id="q" placeholder="z. B. Schwabing-West" value="München" />
 
@@ -109,7 +117,7 @@
         </div>
       </section>
 
-      <!-- Main -->
+      <!-- Ergebnisse -->
       <section class="card" aria-label="Ergebnisse">
         <div class="kpis">
           <div class="kpi"><div class="lbl">Angebote</div><div class="val" id="kpiCount">–</div></div>
@@ -121,26 +129,21 @@
       </section>
     </div>
 
-    <section id="methodik" class="card methodik" aria-label="Methodik">
-      <h2>Methodik & Transparenz</h2>
-      <p class="muted">
-        Diese Demo nutzt synthetische Daten. In Produktion werden nur Quellen verwendet,
-        deren AGB eine automatisierte Abfrage erlauben oder die offizielle APIs bereitstellen.
-        Karte via OSM/Leaflet. Keine Speicherung von PII.
-      </p>
+    <!-- Ein einzelnes Thema -->
+    <section id="topic1" class="card" style="margin-top:16px" aria-label="Thema 1">
+      <h2>Thema 1</h2>
+      <p class="muted">Platzhalter-Inhalt 1</p>
     </section>
-  </main>
 
-  <footer>
-    © 2025 MietRadar München · Karten © OpenStreetMap-Mitwirkende · Tiles via OSM/Leaflet
-  </footer>
+    <footer>© 2025 MietRadar München · Karten © OpenStreetMap-Mitwirkende · Tiles via OSM/Leaflet</footer>
+  </main>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin="anonymous"></script>
+
   <!-- App JS -->
   <script defer src="./app.js"></script>
 </body>
 </html>
-
