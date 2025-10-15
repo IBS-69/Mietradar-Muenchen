@@ -1,6 +1,42 @@
 "use strict";
 
-/* ---------------- Demo-Daten (Fallback) ---------------- */
+/* ========== Theme toggle + small UX helpers ========== */
+(function(){
+  const KEY = 'mietradar:theme';
+  const btn = document.getElementById('themeToggle');
+
+  function labelFor(t){ return t === 'light' ? 'Light Mode' : 'Dark Mode'; }
+  function system(){ try { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch(e){ return 'dark'; } }
+  function applyTheme(t){
+    const v = (t === 'light') ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', v);
+    if (btn){ btn.textContent = labelFor(v); btn.setAttribute('aria-pressed', String(v === 'light')); }
+  }
+
+  applyTheme(localStorage.getItem(KEY) || system());
+  btn?.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = cur === 'light' ? 'dark' : 'light';
+    localStorage.setItem(KEY, next);
+    applyTheme(next);
+  });
+
+  // Sidebar mobile toggle
+  document.getElementById('sbToggle')?.addEventListener('click', () => {
+    document.body.classList.toggle('sb-open');
+  });
+
+  // Startseite smooth scroll
+  document.getElementById('linkHome')?.addEventListener('click', (e) => {
+    e.preventDefault(); window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  // Auth Platzhalter
+  document.getElementById('btnRegister')?.addEventListener('click', () => alert('Registrieren (Platzhalter)'));
+  document.getElementById('btnLogin')?.addEventListener('click', () => alert('Anmelden (Platzhalter)'));
+})();
+
+/* ========== Demo-Daten (Fallback) ========== */
 const demoOffers = [
   { id:1,title:"2-Zi Altbau nahe Hohenzollernplatz", price:1350, size:48, rooms:2,   district:"Schwabing-West",        lat:48.1655, lng:11.5722, date:"2025-10-08" },
   { id:2,title:"3-Zi Neubau, Balkon, U2 Josephsburg", price:1750, size:72, rooms:3,   district:"Au-Haidhausen",        lat:48.1258, lng:11.6077, date:"2025-10-09" },
@@ -10,7 +46,7 @@ const demoOffers = [
   { id:6,title:"4-Zi Dachgeschoss Sendling",          price:2200, size:96, rooms:4,   district:"Sendling",              lat:48.1115, lng:11.5412, date:"2025-10-08" }
 ].map(o => ({ ...o, pricePerSqm: +(o.price / o.size).toFixed(2) }));
 
-/* ---------------- Leaflet Karte ---------------- */
+/* ========== Leaflet Karte ========== */
 const map = L.map('map').setView([48.137154, 11.576124], 12);
 map.attributionControl.setPrefix(false);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -20,8 +56,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 let markersLayer = L.layerGroup().addTo(map);
 let highlightLayer = L.layerGroup().addTo(map);
 
-/* ---------------- Bezirke (GeoJSON) ---------------- */
-// ggf. auf './muc_bezirke.geojson.json' ändern, wenn deine Datei so heißt
+/* ========== Bezirke (GeoJSON) ========== */
 const LOCAL_GEOJSON = './muc_bezirke.geojson';
 const WFS_URL = 'https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:vablock_stadtbezirke_opendata&outputFormat=application/json&srsName=EPSG:4326';
 
@@ -64,7 +99,7 @@ fetch(LOCAL_GEOJSON).then(r => r.ok ? r.json() : Promise.reject())
     .catch(() => initDistrictIndex(MUC_BEZIRKE_MINI))
   );
 
-/* ---------------- MockAPI: Angebote ---------------- */
+/* ========== Angebote (MockAPI) ========== */
 const API_URL = 'https://68ecad8aeff9ad3b1402cfb5.mockapi.io/topOffers';
 let offers = []; // wird nach fetch gefüllt
 
@@ -80,14 +115,14 @@ function normalizeOffer(x) {
   const id       = Number(x.id ?? Date.now());
   const title    = String(x.title ?? 'Ohne Titel');
   const price    = parsePriceEUR(x.price);
-  const size     = Number(x.size ?? 0);      // Mock hat keine Größe -> 0
+  const size     = Number(x.size ?? 0);
   const rooms    = Number(x.rooms ?? 0);
   const district = String(x.district ?? 'Unbekannt');
   const url      = String(x.url ?? '#');
   const image    = String(x.image ?? '');
   const dateStr  = String(x.createdAt ?? new Date().toISOString());
 
-  // lat/lng aus API oder fallback auf Bezirkszentrum
+  // lat/lng fallback
   let lat = Number(x.lat), lng = Number(x.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     const c = districtCenters[normName(district)];
@@ -111,7 +146,7 @@ async function fetchOffers() {
   }
 }
 
-/* ---------------- Render-Helpers ---------------- */
+/* ========== Render-Helpers ========== */
 const resultsEl = document.getElementById('results');
 const kpiCount  = document.getElementById('kpiCount');
 const kpiMedian = document.getElementById('kpiMedian');
@@ -171,7 +206,7 @@ function renderMarkers(items){
   });
 }
 
-/* ---------------- Filtering ---------------- */
+/* ========== Filtering ========== */
 const q            = document.getElementById('q');
 const maxRent      = document.getElementById('maxRent');
 const roomsSel     = document.getElementById('rooms');
@@ -238,7 +273,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   applyFilters(); highlightDistrict('', []);
 });
 
-/* ---------------- Top-Angebote (Scroller) ---------------- */
+/* ========== Top-Angebote (Scroller) ========== */
 function renderTopOffers(items){
   const el=document.getElementById('topOffers'); if(!el) return;
   const html=(items&&items.length?items:[{title:'Keine Treffer',url:'#'}]).map(it => `
@@ -250,11 +285,10 @@ function renderTopOffers(items){
   el.innerHTML=html;
 }
 
-/* ---------------- Initial: API laden → Rendern ---------------- */
+/* ========== Initial ========== */
 (async () => {
   await fetchOffers();   // MockAPI laden (Fallback: demoOffers)
   applyFilters();        // Liste, Marker, KPIs
-
   // Top-Leiste aus der MockAPI (neueste 12)
   const top = [...offers]
     .sort((a,b)=>new Date(b.date)-new Date(a.date))
