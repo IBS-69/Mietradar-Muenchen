@@ -32,8 +32,8 @@
   });
 
   // Auth Platzhalter
-  document.getElementById('btnRegister')?.addEventListener('click', () => alert('Registrieren (Platzhalter)'));
-  document.getElementById('btnLogin')?.addEventListener('click', () => alert('Anmelden (Platzhalter)'));
+  document.getElementById('btnRegister')?.addEventListener('click', () => window.location.href = "/register.html");
+  document.getElementById('btnLogin')?.addEventListener('click', () => window.location.href = "/login.html");
 })();
 
 /* ========== Demo-Daten (Fallback) ========== */
