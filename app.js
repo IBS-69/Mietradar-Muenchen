@@ -31,7 +31,7 @@
     e.preventDefault(); window.scrollTo({ top:0, behavior:'smooth' });
   });
 
-  // Auth Platzhalter
+  // Auth Buttons
   document.getElementById('btnRegister')?.addEventListener('click', () => window.location.href = "/register.html");
   document.getElementById('btnLogin')?.addEventListener('click', () => window.location.href = "/login.html");
 })();

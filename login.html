@@ -1,69 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MietRadar München</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin="anonymous" />
-
-  <!-- App CSS -->
-  <link rel="stylesheet" href="./style.css" />
+<title>My Website</title>
 </head>
-<body class="with-sb">
-  <!-- FIXED LEFT SIDEBAR -->
-  <aside class="sidebar" aria-label="Navigation">
-    <nav class="sb-section" aria-label="Navigation-Placeholder">
-      <a class="sb-link" href="#" title="Zur Startseite" id="linkHome">Startseite</a>
-      <a class="sb-link" href="#topic1">Placeholder 1</a>
-    </nav>
-  </aside>
-
-  <header>
-    <div class="wrap header-row">
-      <button class="sb-toggle" id="sbToggle" aria-label="Sidebar öffnen/schließen">☰</button>
-    <a class="brand" href="/index.html" title="Zur Startseite">
-        <span class="dot" aria-hidden="true"></span>
-        <span>MietRadar München</span>
-    </a>
-      <nav class="main-nav">
-        <button id="btnRegister" class="authbtn"  aria-label="Registrieren">Registrieren</button>
-        <button id="btnLogin" class="authbtn"  aria-label="Anmelden">Anmelden</button>
-        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Dark Mode</button>
-      </nav>
-    </div>
-  </header>
 <body>
-  <main class="login-root">
-    <form id="loginForm" class="login-form" autocomplete="on" novalidate>
-      <h1 class="title">Anmelden</h1>
-
-      <label for="email" class="label">E‑Mail</label>
-      <input id="email" name="email" type="email" placeholder="name@example.com" required autocomplete="email" class="input" />
-
-      <label for="password" class="label">Passwort</label>
-      <input id="password" name="password" type="password" placeholder="Dein Passwort" required minlength="8" autocomplete="current-password" class="input" />
-
-      <div class="row">
-        <label class="checkbox">
-          <input id="remember" name="remember" type="checkbox" />
-          <span>Angemeldet bleiben</span>
-        </label>
-      </div>
-
-      <div id="error" role="alert" aria-live="polite" class="error" hidden></div>
-
-      <button id="submitBtn" type="submit" class="btn">Login</button>
-
-      <p class="meta">Noch kein Konto? <a href="/register.html">Registrieren</a></p>
-    </form>
-  </main>
-
-  <script src="js/login.js"></script>
+<h1>Hello, World!</h1>
+<a href="/index.html">Startseite</a>
 </body>
 </html>

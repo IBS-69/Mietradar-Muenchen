@@ -32,13 +32,14 @@ header{
   background:var(--panel); border:1px solid var(--border); border-radius:14px;
   padding:14px; box-shadow:0 6px 24px rgba(0,0,0,.25);
 }
-h2{font-size:16px;margin:0 0 10px;color:#c9d3ea}
+h2{font-size:16px;margin:0 0 10px;}
 label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
 input,select{
   width:100%; padding:10px 12px; border-radius:10px; border:1px solid #273043;
   background:#0f1320; color:var(--text); appearance:textfield;
 }
-input{-moz-appearance:textfield}
+/* Aus Kompatibilitätsgründen zu Allgemeiner Appearance geändert*/
+input{appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -94,7 +95,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .toptitle{margin:6px 0 0;font-size:14px;font-weight:700;color:var(--text);line-height:1.2;min-height:34px}
 
 /* Footer */
-footer{padding:30px 16px;color:#8b94a7;font-size:12px;text-align:center}
+footer{padding:30px 16px;color:#8b94a7;font-size:12px;text-align:center;text-decoration:none;}
 
 /* --- Fixed Left Sidebar --- */
 .with-sb{ padding-left:200px; }
@@ -141,3 +142,14 @@ html[data-theme="light"] .sb-link{ background:#ffffff; border-color:var(--border
 }
 .authbtn:hover{ filter:brightness(1.05) }
 html[data-theme="light"] .authbtn{ background:#ffffff; border-color:var(--border); color:#0b1324 }
+
+
+/* Unterüberschriften*/
+.unterueberschrift{
+  font-size:24px; margin:0 0 10px;font-weight:600;
+}
+
+/*Links*/
+.link{
+  color:var(--accent); text-decoration:none;
+}
