@@ -1,10 +1,117 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="de">
 <head>
-<title>My Website</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registrieren – MietRadar</title>
+  <meta name="description" content="MietRadar – Neues Konto anlegen" />
+  <!-- Hinweis: CSS/JS bewusst ausgelassen. Diese Datei ist nur das HTML-Grundgerüst. -->
 </head>
 <body>
-<h1>Hello, World!</h1>
-<a href="/index.html">Startseite</a>
+  <header>
+    <nav aria-label="Hauptnavigation">
+      <a href="index.html">← Zur Startseite</a>
+      •
+      <a href="login.html">Schon ein Konto? Anmelden</a>
+    </nav>
+  </header>
+
+  <main id="main" role="main" aria-labelledby="title">
+    <h1 id="title">Registrieren</h1>
+
+    <!-- Serverseitige Flash/Statusmeldungen -->
+    <div id="flash" role="status" aria-live="polite">
+      <!-- Beispiele (vom Server einfügen):
+      <p class="error">Diese E‑Mail ist bereits vergeben.</p>
+      <p class="success">Registrierung erfolgreich. Bitte bestätige deine E‑Mail.</p>
+      -->
+    </div>
+
+    <!-- Registrierungsformular: action-Ziel für PHP anpassen (z. B. /register.php) -->
+    <form id="registerForm" method="post" action="register.php" aria-describedby="hint-required" novalidate>
+      <!-- Sicherheitsfelder -->
+      <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}" />
+      <!-- Ziel nach erfolgreicher Registrierung (z. B. auf /login.html oder /index.html) -->
+      <input type="hidden" name="redirect" value="/login.html" />
+      <!-- Honeypot gegen Bots (serverseitig prüfen: muss leer bleiben) -->
+      <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+        <label for="hp">Lass dieses Feld leer</label>
+        <input id="hp" name="company" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <!-- Personendaten -->
+      <fieldset>
+        <legend>Deine Angaben</legend>
+        <div class="field">
+          <label for="firstName">Vorname</label>
+          <input id="firstName" name="first_name" type="text" required autocomplete="given-name" aria-describedby="err-first" />
+          <small id="err-first" class="error" aria-live="polite"></small>
+        </div>
+        <div class="field">
+          <label for="lastName">Nachname</label>
+          <input id="lastName" name="last_name" type="text" required autocomplete="family-name" aria-describedby="err-last" />
+          <small id="err-last" class="error" aria-live="polite"></small>
+        </div>
+      </fieldset>
+
+      <!-- Zugangsdaten -->
+      <fieldset>
+        <legend>Zugangsdaten</legend>
+        <div class="field">
+          <label for="email">E‑Mail</label>
+          <input id="email" name="email" type="email" required autocomplete="email" placeholder="du@example.com" aria-describedby="err-email" />
+          <small id="err-email" class="error" aria-live="polite"></small>
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" aria-describedby="err-pass" />
+          <small id="err-pass" class="error" aria-live="polite"></small>
+        </div>
+        <div class="field">
+          <label for="password2">Passwort wiederholen</label>
+          <input id="password2" name="password_confirm" type="password" required minlength="8" autocomplete="new-password" aria-describedby="err-pass2" />
+          <small id="err-pass2" class="error" aria-live="polite"></small>
+        </div>
+      </fieldset>
+
+      <!-- Rechtliches -->
+      <fieldset>
+        <legend>Rechtliches</legend>
+        <div class="field">
+          <label>
+            <input type="checkbox" name="accept_tos" value="1" required />
+            Ich akzeptiere die <a href="agb.html">AGB</a> und die <a href="datenschutz.html">Datenschutzbestimmungen</a>.
+          </label>
+          <small id="err-tos" class="error" aria-live="polite"></small>
+        </div>
+        <!-- Optionaler Newsletter (freiwillig) -->
+        <div class="field">
+          <label>
+            <input type="checkbox" name="newsletter" value="1" />
+            Ich möchte gelegentlich Updates zu neuen Funktionen erhalten.
+          </label>
+        </div>
+      </fieldset>
+
+      <p id="hint-required"><small>Pflichtfelder sind mit * gekennzeichnet (falls CSS dies später darstellt).</small></p>
+
+      <div class="actions">
+        <button type="submit" name="register">Registrieren</button>
+        <a href="login.html">Ich habe bereits ein Konto</a>
+      </div>
+    </form>
+
+    <!-- Hinweise für serverseitige Verarbeitung (Kommentare):
+      - Validierung: Pflichtfelder, E‑Mail-Format, Passwortlänge, Passwort=Bestätigung, AGB-Checkbox.
+      - E‑Mail muss eindeutig sein; bei Konflikt Fehler in #flash oder feldspezifisch.
+      - Nach erfolgreicher Registrierung E‑Mail-Verifizierung versenden (Token, Ablaufzeit, Resend-Limit).
+      - Option: Auto-Login nach Verifizierung und Redirect gemäß hidden "redirect".
+      - CSRF-Token strikt prüfen; Honeypot-Feld ablehnen, wenn befüllt.
+    -->
+  </main>
+
+  <footer>
+    <p><small>© 2025 MietRadar München</small></p>
+  </footer>
 </body>
 </html>
