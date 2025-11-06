@@ -1,10 +1,88 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="de">
 <head>
-<title>My Website</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anmelden – MietRadar</title>
+  <meta name="description" content="MietRadar – Anmeldung zum Konto" />
+
 </head>
 <body>
-<h1>Hello, World!</h1>
-<a href="/index.html">Startseite</a>
+  <header>
+    <nav aria-label="Hauptnavigation">
+      <a href="index.html">← Zur Startseite</a>
+      •
+      <a href="Login und Register.html">Registrieren</a>
+    </nav>
+  </header>
+
+  <main id="main" role="main" aria-labelledby="title">
+    <h1 id="title">Anmelden</h1>
+
+    <!-- Server‑Seitige Flash/Fehlernachrichten (wird von PHP befüllt) -->
+    <div id="flash" role="status" aria-live="polite">
+      <!-- Beispiel (vom Server einfügen):
+      <p class="error">E-Mail oder Passwort ist falsch.</p>
+      <p class="success">Passwort zurückgesetzt – bitte neu anmelden.</p>
+      -->
+    </div>
+
+    <!-- Login-Formular: action-Ziel für PHP anpassen (z. B. /login.php) -->
+    <form id="loginForm" method="post" action="login.php" aria-describedby="hint-required" novalidate>
+      <!-- CSRF-Token (vom Server einsetzen) -->
+      <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}" />
+      <!-- Optional: Redirect-Ziel nach erfolgreichem Login -->
+      <input type="hidden" name="redirect" value="/index.html" />
+
+      <fieldset>
+        <legend class="visually-hidden">Zugangsdaten</legend>
+
+        <div class="field">
+          <label for="email">E‑Mail</label>
+          <input id="email" name="email" type="email" required autocomplete="username" placeholder="du@example.com" aria-describedby="err-email" />
+          <small id="err-email" class="error" aria-live="polite"></small>
+        </div>
+
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input id="password" name="password" type="password" required minlength="6" autocomplete="current-password" placeholder="••••••" aria-describedby="err-password" />
+          <small id="err-password" class="error" aria-live="polite"></small>
+        </div>
+
+        <div class="field">
+          <label>
+            <input type="checkbox" name="remember" value="1" /> Angemeldet bleiben
+          </label>
+        </div>
+      </fieldset>
+
+      <p id="hint-required"><small>Pflichtfelder sind mit * gekennzeichnet (falls CSS dies später darstellt).</small></p>
+
+      <div class="actions">
+        <button type="submit">Anmelden</button>
+        <a href="passwort-vergessen.html">Passwort vergessen?</a>
+      </div>
+
+      <p><small>Noch kein Konto? <a href="Login und Register.html">Jetzt registrieren</a>.</small></p>
+    </form>
+
+    <!-- Optional: rechtliche Links -->
+    <section aria-label="Rechtliches">
+      <p><small><a href="agb.html">AGB</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></small></p>
+    </section>
+
+    <!-- Progressive Enhancement Hinweise (werden später mit JS genutzt) -->
+    <!--
+      - Clientseitige Validierung & Fehlermeldungen
+      - Passwort anzeigen/ausblenden
+      - Disable/Loading-State für den Submit-Button
+      - Redirect-Handling aus dem hidden Feld
+      - Fehler-Mapping vom Server in #flash und .error Elemente
+    -->
+  </main>
+
+  <footer>
+    <p><small>© 2025 MietRadar München</small></p>
+  </footer>
 </body>
 </html>
