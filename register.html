@@ -3,115 +3,198 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registrieren – MietRadar</title>
-  <meta name="description" content="MietRadar – Neues Konto anlegen" />
-  <!-- Hinweis: CSS/JS bewusst ausgelassen. Diese Datei ist nur das HTML-Grundgerüst. -->
+  <title>Registrieren – MietRadar München</title>
+  <meta name="description" content="MietRadar München – Kostenlos registrieren und Wohnungsangebote entdecken." />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
+  <!-- Skip link for keyboard users -->
+  <a class="visually-hidden" href="#main">Zum Hauptinhalt springen</a>
+  
   <header>
-    <nav aria-label="Hauptnavigation">
-      <a href="index.html">← Zur Startseite</a>
-      •
-      <a href="login.html">Schon ein Konto? Anmelden</a>
+    <nav aria-label="Hauptnavigation" class="header-nav">
+      <a href="index.html" class="nav-brand">MietRadar München</a>
+      <div class="nav-right">
+        <a href="login.html" class="nav-link nav-outline">Anmelden</a>
+        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Theme</button>
+      </div>
     </nav>
   </header>
 
-  <main id="main" role="main" aria-labelledby="title">
-    <h1 id="title">Registrieren</h1>
+  <main id="main" role="main">
+    <!-- Hero Section -->
+    <section class="auth-hero" aria-label="Willkommen">
+      <div class="hero-content">
+        <h1>Jetzt kostenlos registrieren</h1>
+        <p class="hero-subtitle">Werde Teil der MietRadar Community und finde dein Zuhause in München</p>
+      </div>
+    </section>
 
-    <!-- Serverseitige Flash/Statusmeldungen -->
-    <div id="flash" role="status" aria-live="polite">
-      <!-- Beispiele (vom Server einfügen):
-      <p class="error">Diese E‑Mail ist bereits vergeben.</p>
-      <p class="success">Registrierung erfolgreich. Bitte bestätige deine E‑Mail.</p>
-      -->
-    </div>
+    <!-- Flash messages -->
+    <div id="flash" role="status" aria-live="polite" class="flash-container"></div>
 
-    <!-- Registrierungsformular: action-Ziel für PHP anpassen (z. B. /register.php) -->
-    <form id="registerForm" method="post" action="register.php" aria-describedby="hint-required" novalidate>
+    <!-- Registration Card -->
+    <div class="auth-container">
+      <section class="card auth-card">
+        <form id="registerForm" method="post" action="register.php" aria-describedby="hint-required" novalidate>
       <!-- Sicherheitsfelder -->
       <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}" />
-      <!-- Ziel nach erfolgreicher Registrierung (z. B. auf /login.html oder /index.html) -->
+      <!-- Ziel nach erfolgreicher Registrierung -->
       <input type="hidden" name="redirect" value="/login.html" />
-      <!-- Honeypot gegen Bots (serverseitig prüfen: muss leer bleiben) -->
+      <!-- Honeypot gegen Bots -->
       <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
         <label for="hp">Lass dieses Feld leer</label>
         <input id="hp" name="company" type="text" tabindex="-1" autocomplete="off" />
       </div>
 
-      <!-- Personendaten -->
       <fieldset>
-        <legend>Deine Angaben</legend>
+        <legend class="visually-hidden">Registrierungsdaten</legend>
+
+        <!-- Personendaten -->
         <div class="field">
-          <label for="firstName">Vorname</label>
-          <input id="firstName" name="first_name" type="text" required autocomplete="given-name" aria-describedby="err-first" />
+          <label for="firstName">
+            <span class="field-label">Vorname</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap">
+            <input id="firstName" name="first_name" type="text" required autocomplete="given-name" placeholder="Max" aria-describedby="err-first" />
+          </div>
           <small id="err-first" class="error" aria-live="polite"></small>
         </div>
+
         <div class="field">
-          <label for="lastName">Nachname</label>
-          <input id="lastName" name="last_name" type="text" required autocomplete="family-name" aria-describedby="err-last" />
+          <label for="lastName">
+            <span class="field-label">Nachname</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap">
+            <input id="lastName" name="last_name" type="text" required autocomplete="family-name" placeholder="Mustermann" aria-describedby="err-last" />
+          </div>
           <small id="err-last" class="error" aria-live="polite"></small>
         </div>
-      </fieldset>
 
-      <!-- Zugangsdaten -->
-      <fieldset>
-        <legend>Zugangsdaten</legend>
+        <!-- Zugangsdaten -->
         <div class="field">
-          <label for="email">E‑Mail</label>
-          <input id="email" name="email" type="email" required autocomplete="email" placeholder="du@example.com" aria-describedby="err-email" />
+          <label for="email">
+            <span class="field-label">E‑Mail</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap">
+            <input id="email" name="email" type="email" required autocomplete="email" placeholder="max@example.com" aria-describedby="err-email" />
+          </div>
           <small id="err-email" class="error" aria-live="polite"></small>
         </div>
+
         <div class="field">
-          <label for="password">Passwort</label>
-          <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" aria-describedby="err-pass" />
+          <label for="password">
+            <span class="field-label">Passwort</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap pw-wrap">
+            <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Min. 8 Zeichen" aria-describedby="err-pass" />
+            <button type="button" class="pw-toggle" aria-pressed="false" aria-controls="password" aria-label="Passwort anzeigen" title="Passwort anzeigen/verbergen">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
           <small id="err-pass" class="error" aria-live="polite"></small>
         </div>
+
         <div class="field">
-          <label for="password2">Passwort wiederholen</label>
-          <input id="password2" name="password_confirm" type="password" required minlength="8" autocomplete="new-password" aria-describedby="err-pass2" />
+          <label for="password2">
+            <span class="field-label">Passwort wiederholen</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap pw-wrap">
+            <input id="password2" name="password_confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Min. 8 Zeichen" aria-describedby="err-pass2" />
+            <button type="button" class="pw-toggle" aria-pressed="false" aria-controls="password2" aria-label="Passwort anzeigen" title="Passwort anzeigen/verbergen">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
           <small id="err-pass2" class="error" aria-live="polite"></small>
         </div>
-      </fieldset>
 
-      <!-- Rechtliches -->
-      <fieldset>
-        <legend>Rechtliches</legend>
-        <div class="field">
-          <label>
+        <!-- Rechtliches -->
+        <div class="field checkbox-field">
+          <label class="checkbox-label">
             <input type="checkbox" name="accept_tos" value="1" required />
-            Ich akzeptiere die <a href="agb.html">AGB</a> und die <a href="datenschutz.html">Datenschutzbestimmungen</a>.
+            <span>Ich akzeptiere die <a href="agb.html" style="color:var(--accent2); text-decoration:none;">AGB</a> und <a href="datenschutz.html" style="color:var(--accent2); text-decoration:none;">Datenschutz</a></span>
           </label>
           <small id="err-tos" class="error" aria-live="polite"></small>
         </div>
-        <!-- Optionaler Newsletter (freiwillig) -->
-        <div class="field">
-          <label>
+
+        <div class="field checkbox-field">
+          <label class="checkbox-label">
             <input type="checkbox" name="newsletter" value="1" />
-            Ich möchte gelegentlich Updates zu neuen Funktionen erhalten.
+            <span>Ich möchte Updates zu neuen Funktionen erhalten</span>
           </label>
         </div>
       </fieldset>
 
-      <p id="hint-required"><small>Pflichtfelder sind mit * gekennzeichnet (falls CSS dies später darstellt).</small></p>
+      <p id="hint-required" class="hint-text">
+        <small>Pflichtfelder sind mit * gekennzeichnet</small>
+      </p>
 
+      <!-- Actions -->
       <div class="actions">
-        <button type="submit" name="register">Registrieren</button>
-        <a href="login.html">Ich habe bereits ein Konto</a>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span class="btn-text">Jetzt registrieren</span>
+        </button>
       </div>
-    </form>
 
-    <!-- Hinweise für serverseitige Verarbeitung (Kommentare):
-      - Validierung: Pflichtfelder, E‑Mail-Format, Passwortlänge, Passwort=Bestätigung, AGB-Checkbox.
-      - E‑Mail muss eindeutig sein; bei Konflikt Fehler in #flash oder feldspezifisch.
-      - Nach erfolgreicher Registrierung E‑Mail-Verifizierung versenden (Token, Ablaufzeit, Resend-Limit).
-      - Option: Auto-Login nach Verifizierung und Redirect gemäß hidden "redirect".
-      - CSRF-Token strikt prüfen; Honeypot-Feld ablehnen, wenn befüllt.
-    -->
+      <!-- Sign In CTA -->
+      <div class="signup-cta">
+        <p>Bereits angemeldet? <a href="login.html" class="link-primary">Hier anmelden</a></p>
+      </div>
+        </form>
+      </section>
+
+      <!-- Trust Indicators -->
+      <section class="trust-section">
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="10" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Sichere Verbindung</strong>
+            <small>HTTPS verschlüsselt</small>
+          </div>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Schnelle Suche</strong>
+            <small>Live-Angebote in München</small>
+          </div>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Datenschutz</strong>
+            <small>Deine Daten sind sicher</small>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer Links -->
+    <section class="footer-links" aria-label="Rechtliches">
+      <a href="agb.html">AGB</a>
+      <span class="separator">•</span>
+      <a href="datenschutz.html">Datenschutz</a>
+      <span class="separator">•</span>
+      <a href="impressum.html">Impressum</a>
+    </section>
   </main>
 
   <footer>
-    <p><small>© 2025 MietRadar München</small></p>
+    <p><small>© 2025 MietRadar München · Die Immobilienplattform für München</small></p>
   </footer>
+
+  <!-- Client-side enhancements: theme toggle, password show/hide, form validation -->
+  <script defer src="auth.js"></script>
 </body>
 </html>
