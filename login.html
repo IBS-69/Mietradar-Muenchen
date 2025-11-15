@@ -3,86 +3,170 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Anmelden – MietRadar</title>
-  <meta name="description" content="MietRadar – Anmeldung zum Konto" />
+  <title>Anmelden – MietRadar München</title>
+  <meta name="description" content="MietRadar München – Sicher anmelden und Wohnungsangebote in München entdecken." />
+  <link rel="stylesheet" href="style.css?v=7" />
 
 </head>
 <body>
+  <!-- Skip link for keyboard users -->
+  <a class="visually-hidden" href="#main">Zum Hauptinhalt springen</a>
+  
   <header>
-    <nav aria-label="Hauptnavigation">
-      <a href="index.html">← Zur Startseite</a>
-      •
-      <a href="Login und Register.html">Registrieren</a>
+    <nav aria-label="Hauptnavigation" class="header-nav">
+      <a href="index.html" class="nav-brand">MietRadar München</a>
+      <div class="nav-right">
+        <a href="Register.html" class="nav-link nav-outline">Registrieren</a>
+        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Theme</button>
+      </div>
     </nav>
   </header>
 
-  <main id="main" role="main" aria-labelledby="title">
-    <h1 id="title">Anmelden</h1>
-
-    <!-- Server‑Seitige Flash/Fehlernachrichten (wird von PHP befüllt) -->
-    <div id="flash" role="status" aria-live="polite">
-      <!-- Beispiel (vom Server einfügen):
-      <p class="error">E-Mail oder Passwort ist falsch.</p>
-      <p class="success">Passwort zurückgesetzt – bitte neu anmelden.</p>
-      -->
-    </div>
-
-    <!-- Login-Formular: action-Ziel für PHP anpassen (z. B. /login.php) -->
-    <form id="loginForm" method="post" action="login.php" aria-describedby="hint-required" novalidate>
-      <!-- CSRF-Token (vom Server einsetzen) -->
-      <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}" />
-      <!-- Optional: Redirect-Ziel nach erfolgreichem Login -->
-      <input type="hidden" name="redirect" value="/index.html" />
-
-      <fieldset>
-        <legend class="visually-hidden">Zugangsdaten</legend>
-
-        <div class="field">
-          <label for="email">E‑Mail</label>
-          <input id="email" name="email" type="email" required autocomplete="username" placeholder="du@example.com" aria-describedby="err-email" />
-          <small id="err-email" class="error" aria-live="polite"></small>
-        </div>
-
-        <div class="field">
-          <label for="password">Passwort</label>
-          <input id="password" name="password" type="password" required minlength="6" autocomplete="current-password" placeholder="••••••" aria-describedby="err-password" />
-          <small id="err-password" class="error" aria-live="polite"></small>
-        </div>
-
-        <div class="field">
-          <label>
-            <input type="checkbox" name="remember" value="1" /> Angemeldet bleiben
-          </label>
-        </div>
-      </fieldset>
-
-      <p id="hint-required"><small>Pflichtfelder sind mit * gekennzeichnet (falls CSS dies später darstellt).</small></p>
-
-      <div class="actions">
-        <button type="submit">Anmelden</button>
-        <a href="passwort-vergessen.html">Passwort vergessen?</a>
+  <main id="main" role="main" class="main-wrap">
+    <!-- Hero Section -->
+    <section class="auth-hero" aria-label="Willkommen">
+      <div class="hero-content">
+        <h1>Willkommen zurück!</h1>
+        <p class="hero-subtitle">Dein Zugang zu den besten Wohnungsangeboten in München</p>
       </div>
-
-      <p><small>Noch kein Konto? <a href="Login und Register.html">Jetzt registrieren</a>.</small></p>
-    </form>
-
-    <!-- Optional: rechtliche Links -->
-    <section aria-label="Rechtliches">
-      <p><small><a href="agb.html">AGB</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></small></p>
     </section>
 
-    <!-- Progressive Enhancement Hinweise (werden später mit JS genutzt) -->
-    <!--
-      - Clientseitige Validierung & Fehlermeldungen
-      - Passwort anzeigen/ausblenden
-      - Disable/Loading-State für den Submit-Button
-      - Redirect-Handling aus dem hidden Feld
-      - Fehler-Mapping vom Server in #flash und .error Elemente
-    -->
+    <!-- Flash messages -->
+    <div id="flash" role="status" aria-live="polite" class="flash-container"></div>
+
+    <!-- Login Card -->
+    <div class="auth-container">
+      <section class="card auth-card">
+        <form id="loginForm" method="post" action="login.php" aria-describedby="hint-required" novalidate>
+          <!-- CSRF-Token (vom Server einsetzen) -->
+          <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}" />
+          <!-- Optional: Redirect-Ziel nach erfolgreichem Login -->
+          <input type="hidden" name="redirect" value="/index.html" />
+
+          <fieldset>
+            <legend class="visually-hidden">Anmeldedaten</legend>
+
+            <!-- Email Field -->
+            <div class="field">
+              <label for="email">
+                <span class="field-label">E‑Mail</span>
+                <span class="required">*</span>
+              </label>
+              <div class="input-wrap">
+                <input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  required 
+                  aria-required="true" 
+                  autocomplete="username" 
+                  placeholder="max.mustermann@example.com" 
+                  aria-describedby="err-email" 
+                />
+              </div>
+              <small id="err-email" class="error" aria-live="polite"></small>
+            </div>
+
+            <!-- Password Field -->
+            <div class="field">
+              <label for="password">
+                <span class="field-label">Passwort</span>
+                <span class="required">*</span>
+              </label>
+              <div class="input-wrap pw-wrap">
+                <input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  required 
+                  aria-required="true" 
+                  minlength="6" 
+                  autocomplete="current-password" 
+                  placeholder="••••••" 
+                  aria-describedby="err-password" 
+                />
+                <button type="button" class="pw-toggle" aria-pressed="false" aria-controls="password" aria-label="Passwort anzeigen" title="Passwort anzeigen/verbergen">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2"/></svg>
+                </button>
+              </div>
+              <small id="err-password" class="error" aria-live="polite"></small>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="field checkbox-field">
+              <label class="checkbox-label">
+                <input type="checkbox" name="remember" value="1" />
+                <span>Angemeldet bleiben</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <p id="hint-required" class="hint-text">
+            <small>Pflichtfelder sind mit * gekennzeichnet</small>
+          </p>
+
+          <!-- Actions -->
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <span class="btn-text">Anmelden</span>
+            </button>
+            <a class="link-secondary" href="passwort-vergessen.html">Passwort vergessen?</a>
+          </div>
+
+          <!-- Sign Up CTA -->
+          <div class="signup-cta">
+            <p>Noch kein Konto? <a href="Register.html" class="link-primary">Jetzt kostenlos registrieren</a></p>
+          </div>
+        </form>
+      </section>
+
+      <!-- Trust Indicators -->
+      <section class="trust-section">
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="3" y="10" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Sichere Verbindung</strong>
+            <small>HTTPS verschlüsselt</small>
+          </div>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Schnelle Suche</strong>
+            <small>Live-Angebote in München</small>
+          </div>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="trust-text">
+            <strong>Datenschutz</strong>
+            <small>Deine Daten sind sicher</small>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer Links -->
+    <section class="footer-links" aria-label="Rechtliches">
+      <a href="agb.html">AGB</a>
+      <span class="separator">•</span>
+      <a href="datenschutz.html">Datenschutz</a>
+      <span class="separator">•</span>
+      <a href="impressum.html">Impressum</a>
+    </section>
   </main>
 
   <footer>
-    <p><small>© 2025 MietRadar München</small></p>
+    <p><small>© 2025 MietRadar München · Die Immobilienplattform für München</small></p>
   </footer>
+
+  <!-- Client-side enhancements: theme toggle, password show/hide, form validation -->
+  <script defer src="auth.js"></script>
 </body>
 </html>
