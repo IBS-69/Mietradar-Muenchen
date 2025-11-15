@@ -13,34 +13,44 @@
         crossorigin="anonymous" />
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./style.css?v=7" />
 </head>
-<body class="with-sb">
-  <!-- FIXED LEFT SIDEBAR -->
-  <aside class="sidebar" aria-label="Navigation">
-    <nav class="sb-section" aria-label="Navigation-Placeholder">
-      <a class="sb-link" href="#" title="Zur Startseite" id="linkHome">Startseite</a>
-      <a class="sb-link" href="#topic1">Placeholder 1</a>
-    </nav>
-  </aside>
-
+<body>
   <header>
     <div class="wrap header-row">
       <button class="sb-toggle" id="sbToggle" aria-label="Sidebar öffnen/schließen">☰</button>
-      <div class="brand"><span class="dot"></span><span>MietRadar München</span></div>
+      <a href="#" class="brand-link"><span class="brand"><span class="dot"></span><span>MietRadar München</span></span></a>
       <nav class="main-nav">
-        <!-- aktualisiert: Buttons -> Links -->
-        <a id="btnRegister" class="authbtn" href="register.html" aria-label="Registrieren">Registrieren</a>
-        <a id="btnLogin" class="authbtn" href="login.html" aria-label="Anmelden">Anmelden</a>
-        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Dark Mode</button>
+        <a id="btnRegister" class="nav-link nav-outline" href="register.html" aria-label="Registrieren">Registrieren</a>
+        <a id="btnLogin" class="nav-link nav-outline" href="login.html" aria-label="Anmelden">Anmelden</a>
+        <a href="#" class="nav-link btn-cta" id="btnPost" aria-label="Inserieren">Inserieren ab 0 €</a>
+        <button id="themeToggle" class="authbtn" aria-label="Theme umschalten">Theme</button>
       </nav>
     </div>
   </header>
 
   <main class="wrap main-wrap">
+    <!-- HERO SECTION -->
+    <section class="hero-section" aria-label="Herzlich Willkommen">
+      <div class="hero-content">
+        <h1>Finde deine Traumwohnung in München</h1>
+        <p class="hero-subtitle">Über 5.000+ aktuelle Wohnungsangebote · Echtzeit-Updates · Sicher & Kostenlos</p>
+        <div class="hero-gallery">
+          <img class="hero-photo" loading="lazy" src="https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3" alt="Wohnzimmer einer Mietwohnung" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'><rect width=\'100%\' height=\'100%\' fill=\'%23f3f4f6\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236b7280\' font-family=\'Arial, Helvetica, sans-serif\' font-size=36>Bild nicht verfügbar</text></svg>'" />
+          <img class="hero-photo" loading="lazy" src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3" alt="Wohnzimmer in einer normalen Mietwohnung" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'><rect width=\'100%\' height=\'100%\' fill=\'%23f3f4f6\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236b7280\' font-family=\'Arial, Helvetica, sans-serif\' font-size=36>Bild nicht verfügbar</text></svg>'" />
+          <img class="hero-photo" loading="lazy" src="https://images.unsplash.com/photo-1549187774-b4b5f6a1f2b3?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3" alt="Küche einer Mietwohnung" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'><rect width=\'100%\' height=\'100%\' fill=\'%23f3f4f6\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236b7280\' font-family=\'Arial, Helvetica, sans-serif\' font-size=36>Bild nicht verfügbar</text></svg>'" />
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>5.234</strong><span>Angebote live</span></div>
+          <div class="hero-stat"><strong>48</strong><span>Neue heute</span></div>
+          <div class="hero-stat"><strong>2.847</strong><span>Diese Woche angesehen</span></div>
+        </div>
+      </div>
+    </section>
+
     <!-- TOP-ANGEBOTE -->
     <section class="card topbar" aria-label="Top-Angebote">
-      <div class="tophead"><h2>Top-Angebote</h2></div>
+      <div class="tophead"><h2>Aktuelle Top-Angebote</h2><p class="topsubtitle">Die beliebtesten Wohnungen in dieser Woche</p></div>
       <div class="topscroller" id="topOffers" role="list" aria-label="Top-Angebote Scroller"></div>
     </section>
 
@@ -130,11 +140,52 @@
       </section>
     </div>
 
-    <!-- Ein einzelnes Thema -->
-    <section id="topic1" class="card" style="margin-top:16px" aria-label="Thema 1">
-      <h2>Thema 1</h2>
-      <p class="muted">Platzhalter-Inhalt 1</p>
+    <!-- Marktstatistiken & Heatmap -->
+    <section class="card stats-section" style="margin-top:24px" aria-label="Marktstatistiken">
+      <h2>Wohnungsmarkt München – Live-Statistiken</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 3v18h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 14v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10v9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 6v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Durchschnittspreis</h3>
+          <p class="stat-value">€18,50/m²</p>
+          <p class="stat-change">↑ 2,3% diesen Monat</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v6l4 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Durchschnittl. Wartezeit</h3>
+          <p class="stat-value">4,2 Tage</p>
+          <p class="stat-change">bis zur Vermietung</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 2l2.5 5L20 9l-4 3 1 6-5-3-5 3 1-6L4 9l5.5-2L12 2z" stroke="currentColor" stroke-width="1.2" fill="currentColor"/></svg>
+          </div>
+          <h3>Beliebteste Stadtteile</h3>
+          <p class="stat-value">Schwabing · Haidhausen</p>
+          <p class="stat-change">basierend auf Anfragen</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 2l3 7h7l-5.5 4.5L20 22l-8-5-8 5 1.5-8.5L0 9h7z" stroke="currentColor" stroke-width="1.2" fill="currentColor"/></svg>
+          </div>
+          <h3>Teuerste Bezirke</h3>
+          <p class="stat-value">Altstadt-Lehel</p>
+          <p class="stat-change">€24,80/m² durchschnitt</p>
+        </div>
+      </div>
+
+      <div class="heatmap-container">
+        <h3>Nachfrage-Heatmap nach Stadtteil</h3>
+        <p class="heatmap-desc">Karte zeigt relative Nachfrage nach Ihren aktuellen Filtereinstellungen. Klicken Sie auf einen Bezirk für Details.</p>
+        <div id="heatmapLegend" class="heatmap-legend" aria-hidden></div>
+      </div>
     </section>
+
+    <!-- placeholder removed -->
 
     <footer>© 2025 MietRadar München · Karten © OpenStreetMap-Mitwirkende · Tiles via OSM/Leaflet</footer>
   </main>
@@ -143,6 +194,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin="anonymous"></script>
+
+  <!-- Snackbar element -->
+  <div id="snackbar" role="status" aria-live="polite" class="snackbar" hidden></div>
 
   <!-- App JS -->
   <script defer src="./app.js"></script>
