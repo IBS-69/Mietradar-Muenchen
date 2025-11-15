@@ -5,6 +5,13 @@
   const KEY = 'mietradar:theme';
   const btn = document.getElementById('themeToggle');
 
+  // Small snackbar helper (shows temporary messages)
+  const sb = document.getElementById('snackbar');
+  function showSnackbar(msg, timeout = 1800){
+    if (!sb) return; sb.textContent = msg; sb.hidden = false; sb.classList.add('show');
+    clearTimeout(sb._t); sb._t = setTimeout(()=>{ sb.classList.remove('show'); setTimeout(()=> sb.hidden = true, 300); }, timeout);
+  }
+
   function labelFor(t){ return t === 'light' ? 'Light Mode' : 'Dark Mode'; }
   function system(){ try { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch(e){ return 'dark'; } }
   function applyTheme(t){
@@ -19,6 +26,7 @@
     const next = cur === 'light' ? 'dark' : 'light';
     localStorage.setItem(KEY, next);
     applyTheme(next);
+    showSnackbar(next === 'light' ? 'Wechsel zu hellem Modus' : 'Wechsel zu dunklem Modus');
   });
 
   // Sidebar mobile toggle
@@ -31,9 +39,10 @@
     e.preventDefault(); window.scrollTo({ top:0, behavior:'smooth' });
   });
 
-  // Auth Buttons
-  document.getElementById('btnRegister')?.addEventListener('click', () => window.location.href = "/register.html");
-  document.getElementById('btnLogin')?.addEventListener('click', () => window.location.href = "/login.html");
+  // Auth Platzhalter
+  document.getElementById('btnRegister')?.addEventListener('click', () => alert('Registrieren (Platzhalter)'));
+  document.getElementById('btnLogin')?.addEventListener('click', () => alert('Anmelden (Platzhalter)'));
+  document.getElementById('btnPost')?.addEventListener('click', (e) => { e.preventDefault(); alert('Inserieren (Platzhalter)'); });
 })();
 
 /* ========== Demo-Daten (Fallback) ========== */
@@ -55,6 +64,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 let markersLayer = L.layerGroup().addTo(map);
 let highlightLayer = L.layerGroup().addTo(map);
+let districtLayer = L.geoJSON(null, {pane: 'overlayPane'}).addTo(map);
 
 /* ========== Bezirke (GeoJSON) ========== */
 const LOCAL_GEOJSON = './muc_bezirke.geojson';
@@ -91,6 +101,8 @@ function initDistrictIndex(geo) {
     const key = [p.name, p.NAME, p.bezirk, p.BEZIRK, p.GEN, p.gen, p.stadtbezirk].find(Boolean);
     if (key) districtIndex.set(normName(key), f);
   });
+  // try to render choropleth after district geometry becomes available
+  try{ updateDistrictLayer((offers && offers.length) ? offers : demoOffers); }catch(e){}
 }
 fetch(LOCAL_GEOJSON).then(r => r.ok ? r.json() : Promise.reject())
   .then(initDistrictIndex)
@@ -206,6 +218,42 @@ function renderMarkers(items){
   });
 }
 
+function updateDistrictLayer(items){
+  try{
+    // build counts per normalized district name
+    const counts = {};
+    items.forEach(o => { const n = normName(o.district||''); if(!n) return; counts[n] = (counts[n]||0) + 1; });
+    const maxCount = Math.max(0, ...Object.values(counts));
+
+    if (!districtIndex || districtIndex.size === 0) return;
+    const feats = Array.from(districtIndex.values());
+
+    if (districtLayer) { districtLayer.clearLayers(); map.removeLayer(districtLayer); }
+    districtLayer = L.geoJSON(feats, {
+      style: function(f){
+        const name = f.properties && (f.properties.name || f.properties.NAME || f.properties.bezirk) || '';
+        const c = counts[normName(name)] || 0;
+        const ratio = maxCount > 0 ? (c / maxCount) : 0;
+        const hue = Math.round(200 - (180 * ratio)); // blue -> red
+        const fill = `hsl(${hue} 75% ${55 - (ratio*20)}%)`;
+        return { color: '#222', weight:1, fillColor: fill, fillOpacity: 0.12 + (ratio * 0.66) };
+      },
+      onEachFeature: function(f, layer){
+        const name = f.properties && (f.properties.name || f.properties.NAME || f.properties.bezirk) || 'Unbekannt';
+        const c = counts[normName(name)] || 0;
+        layer.bindPopup(`<strong>${name}</strong><br/>Anfragen: ${c}`);
+        layer.on('click', () => { districtSel.value = name; highlightDistrict(name, items); });
+      }
+    }).addTo(map);
+
+    // update legend
+    const legend = document.getElementById('heatmapLegend');
+    if (legend){
+      legend.innerHTML = `<div class="legend-swatch" aria-hidden></div><div class="legend-labels"><span>wenig</span><span>mittel</span><span>hoch</span></div>`;
+    }
+  }catch(e){ console.error('Fehler updateDistrictLayer', e); }
+}
+
 /* ========== Filtering ========== */
 const q            = document.getElementById('q');
 const maxRent      = document.getElementById('maxRent');
@@ -263,6 +311,9 @@ function applyFilters(){
   renderMarkers(items);
   renderKpis(items);
 
+  // update district choropleth on the map
+  try{ updateDistrictLayer(items); } catch(e){ console.warn('Choropleth update failed', e); }
+
   const base = (offers && offers.length) ? offers : demoOffers;
   highlightDistrict(districtSel.value, base);
 }
@@ -283,6 +334,28 @@ function renderTopOffers(items){
       <div class="toptitle">${it.title||'Externer Eintrag'}</div>
     </a>`).join('');
   el.innerHTML=html;
+
+  // Update hero gallery with curated apartment interiors inspired by top-offer types
+  try{
+    const heroImgs = document.querySelectorAll('.hero-photo');
+    const interiors = [
+      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1549187774-b4b5f6a1f2b3?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1598928506312-3f1b9a5b0d5c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ];
+    for(let i=0;i<heroImgs.length;i++){
+      let src = interiors[i % interiors.length];
+      if (items && items[i]){
+        const title = String(items[i].title || '').toLowerCase();
+        if (/dach|dachgeschoss|dachzimmer/.test(title)) src = interiors[2];
+        else if (/balkon|neubau|modern|sanierte/.test(title)) src = interiors[1];
+        else if (/studio|1\s?-?zi|1,5|1zimmer/.test(title)) src = interiors[3];
+      }
+      heroImgs[i].src = src;
+      heroImgs[i].alt = (items && items[i] && items[i].title) ? items[i].title : 'Wohnungsinnenraum';
+    }
+  }catch(e){ console.warn('Could not update hero images', e); }
 }
 
 /* ========== Initial ========== */
