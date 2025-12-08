@@ -1,0 +1,7 @@
+{
+  "name": "MietRadar München",
+  "description": "Die moderne Plattform für Wohnungssuche und Inserate in München. Echtzeit-Karten, smarte Filter und professionelles Design.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

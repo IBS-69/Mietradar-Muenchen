@@ -1,13 +1,20 @@
-# Mietradar München
-<img width="2616" height="2198" alt="image" src="https://github.com/user-attachments/assets/93293077-3d15-4213-b363-9a0ae2121c44" />
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Filter/Mapping sollte so sein:
-<img <img width="996" height="806" alt="image" src="https://github.com/user-attachments/assets/da6b049b-14a3-4404-bcb4-58882605f1ab" />
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/1VC8wk7xyfD8I5WbGMZbr-uRMoDox5ur6
+
+## Run Locally
+
+**Prerequisites:**  Node.js
 
 
-## Links:
-- [Mietradar-Website](https://xn--mietradar-mnchen-tzb.de/)
-- [Postgres-Admin](db.mixmaxjulien.de)
-
-## Infos:
-Link zum Notizbuch (OneNote): [Klick](https://1drv.ms/o/c/49d7539221715e69/ErxptA4h1apDu8IH_4u8CbEBdejpwTUmJj3eqj1kbBsvfg?e=wSvMpz)
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

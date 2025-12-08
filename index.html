@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MietRadar München</title>
+  <meta name="description" content="Finde deine Traumwohnung in München mit MietRadar." />
+
+  <!-- Dark Mode sofort setzen (BEVOR Tailwind lädt) -->
+  <script>
+    (function () {
+      try {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {
+        // Ignorieren, wenn localStorage nicht verfügbar ist
+      }
+    })();
+  </script>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind auf "class"-Darkmode stellen
+    tailwind.config = {
+      darkMode: "class",
+    };
+  </script>
+
+  <!-- Leaflet CSS & JS für die Karte -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
+
+  <!-- Dein eigenes CSS -->
+  <link rel="stylesheet" href="/index.css" />
+</head>
+
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+  <div id="root"></div>
+
+  <!-- React Entry Script -->
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
